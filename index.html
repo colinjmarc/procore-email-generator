@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Procore Email Generator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; color: #333; min-height: 100vh; }
+  .header { background: #f47b20; color: white; padding: 18px 32px; display: flex; align-items: center; gap: 16px; }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header span { font-size: 13px; opacity: 0.85; }
+  .container { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+  .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 28px; margin-bottom: 24px; }
+  .card h2 { font-size: 16px; font-weight: 600; color: #f47b20; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .card h2 .step { background: #f47b20; color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #555; }
+  input[type="text"], input[type="password"], select, textarea { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; transition: border 0.2s; outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: #f47b20; box-shadow: 0 0 0 3px rgba(244,123,32,0.1); }
+  textarea { resize: vertical; min-height: 120px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #f47b20; color: white; }
+  .btn-primary:hover { background: #d96a10; }
+  .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-secondary { background: #eee; color: #333; }
+  .btn-secondary:hover { background: #ddd; }
+  .btn-success { background: #28a745; color: white; }
+  .btn-success:hover { background: #218838; }
+  .status { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 12px; display:none; }
+  .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display:block; }
+  .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display:block; }
+  .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; display:block; }
+  .status.loading { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; display:block; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .upload-area:hover { border-color: #f47b20; background: #fff8f3; }
+  .upload-area.has-file { border-color: #28a745; background: #f0fff4; }
+  .upload-area input { display: none; }
+  .upload-area p { font-size: 13px; color: #888; margin-top: 8px; }
+  .upload-area .icon { font-size: 32px; }
+  .email-output { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; min-height: 200px; }
+  .schedule-preview { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-top: 12px; max-height: 200px; overflow-y: auto; }
+  .schedule-preview table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .schedule-preview th { background: #f47b20; color: white; padding: 6px 10px; text-align: left; }
+  .schedule-preview td { padding: 5px 10px; border-bottom: 1px solid #eee; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+  .badge-overdue { background: #f8d7da; color: #721c24; }
+  .badge-ontrack { background: #d4edda; color: #155724; }
+  .badge-complete { background: #cce5ff; color: #004085; }
+  .badge-late { background: #fff3cd; color: #856404; }
+  .badge-underway { background: #e2d9f3; color: #4a235a; }
+  .actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+  .hidden { display: none !important; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .key-input-wrap { position: relative; }
+  .key-input-wrap input { padding-right: 60px; }
+  .key-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #f47b20; cursor: pointer; background: none; border: none; font-weight: 500; }
+  .email-subject { font-weight: 600; font-size: 15px; color: #333; padding: 10px 14px; background: #fff3e0; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #f47b20; }
+  .steps-list { counter-reset: steps; padding: 0; }
+  .steps-list li { counter-increment: steps; list-style: none; padding: 8px 0 8px 36px; position: relative; font-size: 14px; color: #444; border-bottom: 1px solid #f0f0f0; }
+  .steps-list li:last-child { border-bottom: none; }
+  .steps-list li::before { content: counter(steps); position: absolute; left: 0; top: 8px; background: #f47b20; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .procore-logo { font-weight: 700; font-size: 18px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="procore-logo">OP · ELX</div>
+  <div style="width:1px;height:32px;background:rgba(255,255,255,0.4);margin:0 8px;"></div>
+  <div>
+    <h1>Project Email Generator</h1>
+    <span>Powered by Procore + Google Gemini AI</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- LOGIN SECTION -->
+  <div id="loginSection">
+    <div class="card">
+      <h2><span class="step">1</span> Connect to Procore</h2>
+      <p style="font-size:14px;color:#555;margin-bottom:16px;">Click the button below to open Procore login in a new tab. After approving, Procore will show you a code — copy and paste it here.</p>
+      <ol class="steps-list">
+        <li>Click <strong>"Open Procore Login"</strong> — a new tab will open</li>
+        <li>Sign in with your Procore credentials and click <strong>Allow</strong></li>
+        <li>Procore will display an authorization code on screen — <strong>copy it</strong></li>
+        <li>Paste the code into the field below and click <strong>Connect</strong></li>
+      </ol>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="openProcoreLogin()">🔐 Open Procore Login</button>
+      </div>
+      <div style="margin-top:16px;">
+        <label>Paste Authorization Code from Procore:</label>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <input type="text" id="authCodeInput" placeholder="Paste code here..." style="flex:1;" />
+          <button class="btn btn-primary" onclick="exchangeCode()">Connect →</button>
+        </div>
+      </div>
+      <div id="loginStatus"></div>
+    </div>
+    <div class="card">
+      <h2><span class="step">2</span> Gemini AI API Key</h2>
+      <p style="font-size:13px;color:#888;margin-bottom:14px;">Entered only in your browser — never stored or shared.</p>
+      <label>Google Gemini API Key</label>
+      <div class="key-input-wrap">
+        <input type="password" id="geminiKey" placeholder="AIza..." />
+        <button class="key-toggle" onclick="toggleKey('geminiKey',this)">Show</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP SECTION -->
+  <div id="appSection" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <h2 style="margin-bottom:0;"><span class="step">1</span> Select Project & Load Schedule</h2>
+        <button class="btn btn-secondary" onclick="logout()" style="font-size:12px;padding:6px 14px;">🔓 Logout</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Project</label>
+          <select id="projectSelect" onchange="loadSchedule()">
+            <option value="">-- Loading projects... --</option>
+          </select>
+        </div>
+        <div>
+          <label>Gemini API Key</label>
+          <div class="key-input-wrap">
+            <input type="password" id="geminiKeyApp" placeholder="AIza..." />
+            <button class="key-toggle" onclick="toggleKey('geminiKeyApp',this)">Show</button>
+          </div>
+        </div>
+      </div>
+      <div id="scheduleStatus"></div>
+      <div id="schedulePreview"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">2</span> Upload Meeting Transcript</h2>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('transcriptFile').click()">
+        <input type="file" id="transcriptFile" accept=".txt,.pdf,.doc,.docx" onchange="handleTranscriptUpload(event)">
+        <div class="icon">📄</div>
+        <div id="uploadLabel"><strong>Click to upload transcript</strong></div>
+        <p>Supports .txt, .pdf, .doc, .docx</p>
+      </div>
+      <hr class="divider">
+      <label>Or paste transcript text directly:</label>
+      <textarea id="transcriptText" placeholder="Paste meeting transcript here..."></textarea>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">3</span> Email Preferences</h2>
+      <div class="grid-2">
+        <div>
+          <label>Sender Name</label>
+          <input type="text" id="senderName" placeholder="e.g. John Smith, OP-ELX" />
+        </div>
+        <div>
+          <label>Audience</label>
+          <select id="audienceType">
+            <option value="client">Client</option>
+            <option value="subcontractor">Subcontractors</option>
+            <option value="internal">Internal Team</option>
+            <option value="all">All Stakeholders</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <label>Additional Instructions (optional)</label>
+        <textarea id="extraInstructions" placeholder="e.g. Emphasize the concrete pour milestone, flag the roofing delay..." style="min-height:70px;"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">4</span> Generate Email</h2>
+      <button class="btn btn-primary" id="generateBtn" onclick="generateEmail()">✨ Generate Email with AI</button>
+      <div id="generateStatus"></div>
+    </div>
+
+    <div class="card hidden" id="outputCard">
+      <h2>📧 Generated Email</h2>
+      <div id="emailSubject" class="email-subject"></div>
+      <div id="emailOutput" class="email-output"></div>
+      <div class="actions">
+        <button class="btn btn-success" onclick="copyEmail()">📋 Copy Full Email</button>
+        <button class="btn btn-secondary" onclick="copySubject()">Copy Subject</button>
+        <button class="btn btn-secondary" onclick="generateEmail()">🔄 Regenerate</button>
+      </div>
+      <div id="copyStatus"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG (updated Client ID) ────────────────────────────
+const CLIENT_ID = '_RRdigu4Y8ibiBGnbZ1Ezu4cNc_Czk1t8P0PlO3XT-I';
+const COMPANY_ID = '598134325578904';
+const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob';
+const PROCORE_AUTH_URL = 'https://login.procore.com/oauth/authorize';
+const PROCORE_TOKEN_URL = 'https://login.procore.com/oauth/token';
+const PROCORE_API = 'https://api.procore.com';
+
+let accessToken = null;
+let codeVerifier = null;
+let scheduleData = [];
+let transcriptContent = '';
+
+// PKCE
+function generateVerifier() {
+  const arr = new Uint8Array(64);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+async function generateChallenge(v) {
+  const enc = new TextEncoder().encode(v);
+  const digest = await crypto.subtle.digest('SHA-256', enc);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function openProcoreLogin() {
+  codeVerifier = generateVerifier();
+  sessionStorage.setItem('pkce_verifier', codeVerifier);
+  const challenge = await generateChallenge(codeVerifier);
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    code_challenge: challenge,
+    code_challenge_method: 'S256'
+  });
+  window.open(PROCORE_AUTH_URL + '?' + params.toString(), '_blank');
+  setStatus('loginStatus', 'info', '✅ Procore login opened in a new tab. After approving, copy the code and paste it above.');
+}
+
+async function exchangeCode() {
+  const code = document.getElementById('authCodeInput').value.trim();
+  if (!code) { setStatus('loginStatus','error','❌ Please paste the authorization code from Procore.'); return; }
+  const verifier = sessionStorage.getItem('pkce_verifier') || codeVerifier;
+  if (!verifier) { setStatus('loginStatus','error','❌ Session expired — please click "Open Procore Login" again.'); return; }
+
+  setStatus('loginStatus','loading','⏳ Connecting to Procore...');
+  try {
+    const resp = await fetch(PROCORE_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: REDIRECT_URI,
+        client_id: CLIENT_ID,
+        code_verifier: verifier
+      })
+    });
+    const data = await resp.json();
+    if (data.access_token) {
+      accessToken = data.access_token;
+      sessionStorage.setItem('procore_token', accessToken);
+      const key = document.getElementById('geminiKey').value.trim();
+      if (key) sessionStorage.setItem('gemini_key', key);
+      showApp();
+    } else {
+      setStatus('loginStatus','error','❌ ' + (data.error_description || data.error || 'Token exchange failed. Try logging in again.'));
+    }
+  } catch(e) {
+    setStatus('loginStatus','error','❌ Connection error: ' + e.message);
+  }
+}
+
+function showApp() {
+  document.getElementById('loginSection').classList.add('hidden');
+  document.getElementById('appSection').classList.remove('hidden');
+  const key = sessionStorage.getItem('gemini_key') || document.getElementById('geminiKey').value.trim();
+  if (key) document.getElementById('geminiKeyApp').value = key;
+  loadProjects();
+}
+
+function logout() {
+  accessToken = null;
+  sessionStorage.clear();
+  document.getElementById('appSection').classList.add('hidden');
+  document.getElementById('loginSection').classList.remove('hidden');
+  document.getElementById('outputCard').classList.add('hidden');
+  document.getElementById('authCodeInput').value = '';
+}
+
+async function procoreGet(endpoint) {
+  const resp = await fetch(PROCORE_API + endpoint, {
+    headers: { 'Authorization': 'Bearer ' + accessToken, 'Procore-Company-Id': COMPANY_ID }
+  });
+  if (!resp.ok) throw new Error('API ' + resp.status + ': ' + (await resp.text()).substring(0,200));
+  return resp.json();
+}
+
+async function loadProjects() {
+  try {
+    const projects = await procoreGet('/rest/v1.0/projects?company_id=' + COMPANY_ID + '&per_page=300');
+    const sel = document.getElementById('projectSelect');
+    sel.innerHTML = '<option value="">-- Select a project --</option>';
+    (projects||[]).forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.display_name || p.name || 'Unnamed';
+      sel.appendChild(o);
+    });
+    setStatus('scheduleStatus','success','✅ Loaded ' + (projects||[]).length + ' projects. Select one to load its schedule.');
+  } catch(e) {
+    setStatus('scheduleStatus','error','❌ Failed to load projects: ' + e.message);
+  }
+}
+
+async function loadSchedule() {
+  const projectId = document.getElementById('projectSelect').value;
+  if (!projectId) return;
+  setStatus('scheduleStatus','loading','⏳ Loading schedule...');
+  document.getElementById('schedulePreview').innerHTML = '';
+  scheduleData = [];
+  let tasks = [];
+  const endpoints = [
+    '/rest/v1.1/projects/' + projectId + '/schedule/tasks?per_page=500',
+    '/rest/v1.0/projects/' + projectId + '/schedule/tasks?per_page=500',
+    '/rest/v1.0/projects/' + projectId + '/schedule/activities?per_page=500'
+  ];
+  for (const ep of endpoints) {
+    try { const r = await procoreGet(ep); tasks = r.data||r||[]; if (tasks.length) break; } catch(e) {}
+  }
+  if (!tasks.length) { setStatus('scheduleStatus','info','ℹ️ No schedule tasks found for this project.'); return; }
+  scheduleData = tasks;
+  setStatus('scheduleStatus','success','✅ Loaded ' + tasks.length + ' tasks.');
+  renderPreview(tasks);
+}
+
+function renderPreview(tasks) {
+  const getName = t => t.name||t.task_name||t.activity_name||'';
+  const getWBS = t => t.wbs||t.wbs_code||'';
+  const getFinish = t => formatDate(t.finish_date||t.end_date||t.finish);
+  const getStart = t => formatDate(t.start_date||t.start);
+  const critical = tasks.filter(t => (t.status&&t.status.toLowerCase().includes('overdue'))||(t.total_float!==undefined&&parseFloat(t.total_float)<=0));
+  const upcoming = tasks.filter(t => { const f=t.finish_date||t.end_date; if(!f) return false; const diff=(new Date(f)-new Date())/86400000; return diff>=0&&diff<=30&&!(t.status&&t.status.toLowerCase()==='complete'); });
+  const seen=new Set();
+  const display=[...critical,...upcoming].filter(t=>{ if(seen.has(t.id)) return false; seen.add(t.id); return true; }).slice(0,15);
+  if (!display.length) { document.getElementById('schedulePreview').innerHTML='<p style="font-size:13px;color:#888;margin-top:10px;">✅ No overdue or critical items in next 30 days.</p>'; return; }
+  let html='<div class="schedule-preview"><p style="font-size:12px;color:#888;margin-bottom:8px;">Critical & upcoming tasks</p><table><thead><tr><th>WBS</th><th>Task</th><th>Status</th><th>Start</th><th>Finish</th><th>Float</th></tr></thead><tbody>';
+  display.forEach(t => {
+    const s=(t.status||'').toLowerCase();
+    const bc=s.includes('overdue')?'badge-overdue':s.includes('complete')?'badge-complete':s.includes('late')?'badge-late':s.includes('underway')?'badge-underway':'badge-ontrack';
+    html+=`<tr><td>${getWBS(t)}</td><td>${getName(t)}</td><td><span class="badge ${bc}">${t.status||''}</span></td><td>${getStart(t)}</td><td>${getFinish(t)}</td><td>${t.total_float!==undefined?t.total_float+'d':''}</td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('schedulePreview').innerHTML=html;
+}
+
+async function handleTranscriptUpload(e) {
+  const file=e.target.files[0]; if(!file) return;
+  try {
+    if (file.name.endsWith('.txt')) { transcriptContent=await file.text(); }
+    else { const ab=await file.arrayBuffer(); const bytes=new Uint8Array(ab); let text=''; for(let i=0;i<bytes.length;i++){const c=bytes[i];if(c>31&&c<127)text+=String.fromCharCode(c);else if(c===10||c===13)text+='\n';} transcriptContent=text.replace(/\s{3,}/g,' ').trim().substring(0,15000); }
+    document.getElementById('uploadArea').classList.add('has-file');
+    document.getElementById('uploadLabel').innerHTML='<span style="color:#28a745;font-weight:500">✅ '+file.name+'</span>';
+  } catch(e2) { document.getElementById('uploadLabel').innerHTML='<span style="color:red">Error: '+e2.message+'</span>'; }
+}
+
+async function generateEmail() {
+  const geminiKey=document.getElementById('geminiKeyApp').value.trim();
+  const sel=document.getElementById('projectSelect');
+  const projectName=sel.options[sel.selectedIndex]?.text||'Project';
+  const transcript=document.getElementById('transcriptText').value.trim()||transcriptContent;
+  const audience=document.getElementById('audienceType').value;
+  const sender=document.getElementById('senderName').value.trim();
+  const extra=document.getElementById('extraInstructions').value.trim();
+
+  if(!geminiKey){setStatus('generateStatus','error','❌ Please enter your Gemini API key.');return;}
+  if(!scheduleData.length){setStatus('generateStatus','error','❌ Please select a project and load its schedule first.');return;}
+  if(!transcript){setStatus('generateStatus','error','❌ Please upload or paste a meeting transcript.');return;}
+
+  const btn=document.getElementById('generateBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Generating...';
+  setStatus('generateStatus','loading','⏳ Sending to Gemini AI...');
+
+  const getName=t=>t.name||t.task_name||t.activity_name||'';
+  const getWBS=t=>t.wbs||t.wbs_code||'';
+  const getFinish=t=>formatDate(t.finish_date||t.end_date||t.finish);
+  const getStart=t=>formatDate(t.start_date||t.start);
+  const getPct=t=>t.percent_complete||t.percentage_complete||0;
+
+  const critical=scheduleData.filter(t=>(t.status&&t.status.toLowerCase().includes('overdue'))||(t.total_float!==undefined&&parseFloat(t.total_float)<=0));
+  const late=scheduleData.filter(t=>t.status&&t.status.toLowerCase().includes('late'));
+  const upcoming=scheduleData.filter(t=>{const f=t.finish_date||t.end_date;if(!f)return false;const diff=(new Date(f)-new Date())/86400000;return diff>=0&&diff<=30&&!(t.status&&t.status.toLowerCase()==='complete');});
+  const underway=scheduleData.filter(t=>t.status&&t.status.toLowerCase().includes('underway'));
+
+  const sched=`PROJECT: ${projectName}
+TOTAL TASKS: ${scheduleData.length}
+
+CRITICAL/OVERDUE (${critical.length}):
+${critical.slice(0,20).map(t=>`  - [WBS ${getWBS(t)}] ${getName(t)} | Start: ${getStart(t)} | Finish: ${getFinish(t)} | Float: ${t.total_float!==undefined?t.total_float+'d':'N/A'} | ${t.status||''}`).join('\n')||'  None'}
+
+LATE TO START (${late.length}):
+${late.slice(0,10).map(t=>`  - [WBS ${getWBS(t)}] ${getName(t)} | Finish: ${getFinish(t)}`).join('\n')||'  None'}
+
+UPCOMING MILESTONES - Next 30 Days (${upcoming.length}):
+${upcoming.slice(0,15).map(t=>`  - [WBS ${getWBS(t)}] ${getName(t)} | Finish: ${getFinish(t)} | ${t.status||''}`).join('\n')||'  None'}
+
+UNDERWAY (${underway.length}):
+${underway.slice(0,10).map(t=>`  - [WBS ${getWBS(t)}] ${getName(t)} | ${getPct(t)}% complete | Finish: ${getFinish(t)}`).join('\n')||'  None'}`;
+
+  const audMap={client:'the project client/owner',subcontractor:'subcontractors and trades',internal:'the internal project management team',all:'all project stakeholders'};
+  const prompt=`You are a professional construction project manager at OP-ELX. Write a professional project status email.
+
+AUDIENCE: ${audMap[audience]||'stakeholders'}
+${sender?'FROM: '+sender:''}
+DATE: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+${extra?'SPECIAL INSTRUCTIONS: '+extra:''}
+
+--- PROCORE SCHEDULE DATA ---
+${sched}
+
+--- MEETING TRANSCRIPT ---
+${transcript.substring(0,8000)}
+
+Write the email with:
+1. First line: SUBJECT: [specific subject line]
+2. Greeting appropriate for audience
+3. Project Status Overview (2-3 sentences)
+4. Critical Path & Schedule Risks (specific task names and dates)
+5. Key Discussion Points from Meeting (bullet points)
+6. Action Items & Owners (who does what by when)
+7. Upcoming Milestones (next 30 days with dates)
+8. Professional closing`;
+
+  try {
+    const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:2048}})});
+    const result=await resp.json();
+    if(!resp.ok) throw new Error(result.error?.message||'Gemini error '+resp.status);
+    const text=result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!text) throw new Error('No response from Gemini. Please check your API key.');
+    const subMatch=text.match(/SUBJECT:\s*(.+?)\n/);
+    const subject=subMatch?subMatch[1].trim():'Project Status Update – '+projectName;
+    const body=text.replace(/SUBJECT:\s*.+?\n/,'').trim();
+    document.getElementById('emailSubject').textContent='📌 '+subject;
+    document.getElementById('emailOutput').textContent=body;
+    document.getElementById('outputCard').classList.remove('hidden');
+    document.getElementById('outputCard').scrollIntoView({behavior:'smooth'});
+    setStatus('generateStatus','success','✅ Email generated!');
+  } catch(e) {
+    setStatus('generateStatus','error','❌ '+e.message);
+  } finally {
+    btn.disabled=false; btn.innerHTML='✨ Generate Email with AI';
+  }
+}
+
+function formatDate(d){if(!d)return '';try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}}
+function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)return;el.className='status '+type;el.textContent=msg;}
+function toggleKey(id,btn){const input=document.getElementById(id);input.type=input.type==='password'?'text':'password';btn.textContent=input.type==='password'?'Show':'Hide';}
+async function copyEmail(){const subject=document.getElementById('emailSubject').textContent.replace('📌 ','');const body=document.getElementById('emailOutput').textContent;try{await navigator.clipboard.writeText('Subject: '+subject+'\n\n'+body);setStatus('copyStatus','success','✅ Copied to clipboard!');}catch(e){setStatus('copyStatus','error','Select text and copy manually.');}}
+async function copySubject(){const s=document.getElementById('emailSubject').textContent.replace('📌 ','');try{await navigator.clipboard.writeText(s);setStatus('copyStatus','success','✅ Subject copied!');}catch(e){}}
+
+window.addEventListener('load',()=>{
+  if(sessionStorage.getItem('procore_token')){accessToken=sessionStorage.getItem('procore_token');showApp();}
+  const k=sessionStorage.getItem('gemini_key');
+  if(k&&document.getElementById('geminiKey'))document.getElementById('geminiKey').value=k;
+});
+</script>
+</body>
+</html>

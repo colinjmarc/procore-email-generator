@@ -114,7 +114,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
       </div>
     </div>
     <label for="extraInstructions">Additional Instructions (optional)</label>
-    <input type="text" id="extraInstructions" placeholder="e.g. Emphasize the concrete pour milestone, mention weather delays">
+    <input type="text" id="extraInstructions" placeholder="e.g. Panels for floors 3-5 shipping next week, RFI submitted for anchor spacing">
   </div>
 
   <div class="card">
@@ -210,24 +210,25 @@ function generateEmail() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
-  var prompt = 'You are a professional construction project manager assistant. Generate a complete project status email.\n\n'
+  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels to installers on construction projects. Elemex does NOT install panels — we design them, manufacture them, and deliver them so the installing contractor can do their work on schedule.\n\n'
+    + 'Your job is to write a project status email from Elemex\'s point of view. Focus entirely on panel design, fabrication, delivery schedules, and how Elemex\'s scope impacts or supports the installer\'s upcoming work on the critical path. Do NOT mention budgets, costs, payments, or financial information of any kind.\n\n'
     + 'PROJECT: ' + (projectName || 'Construction Project') + '\n'
     + 'AUDIENCE: ' + audience + '\n'
     + 'TONE: ' + tone + '\n'
-    + 'SENDER: ' + (senderName || 'Project Manager') + '\n'
-    + (extra ? 'SPECIAL INSTRUCTIONS: ' + extra + '\n' : '')
-    + '\nSCHEDULE/GANTT DATA:\n' + (ganttText || 'No Gantt chart provided')
+    + 'SENDER: ' + (senderName || 'Elemex Project Manager') + '\n'
+    + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
+    + '\nGANTT CHART / SCHEDULE DATA:\n' + (ganttText || 'No Gantt chart provided')
     + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
-    + '\n\nWrite a complete professional email with:\n'
-    + '1. SUBJECT line\n'
-    + '2. Greeting appropriate for ' + audience + '\n'
-    + '3. Project Status Overview (2-3 sentences)\n'
-    + '4. Critical Path and Schedule Risks (specific tasks and dates from the schedule)\n'
-    + '5. Key Discussion Points from Meeting (bullet points)\n'
-    + '6. Action Items and Owners (who does what by when)\n'
-    + '7. Upcoming Milestones next 30 days (with dates)\n'
-    + '8. Professional closing signed by ' + (senderName || 'Project Manager') + '\n\n'
-    + 'Write the full ready-to-send email now.';
+    + '\n\nWrite a complete professional email with the following sections:\n\n'
+    + '1. SUBJECT: (one concise line)\n\n'
+    + '2. Greeting appropriate for ' + audience + '\n\n'
+    + '3. PROJECT STATUS OVERVIEW — 2 to 3 sentences summarizing overall project progress as it relates to Elemex\'s scope (panel design, fabrication, delivery). No budget talk.\n\n'
+    + '4. CRITICAL PATH — UPCOMING PANEL-RELATED TASKS: List the next key tasks from the Gantt schedule that are on or affect the critical path, specifically those tied to facade panel installation. Include task names and dates. Flag any tasks at risk of delay.\n\n'
+    + '5. KEY POINTS FROM MEETING — From Elemex\'s perspective as designer and supplier: what decisions, concerns, or updates from the transcript are relevant to our scope. Reframe any installer-focused points to reflect what Elemex needs to do or respond to.\n\n'
+    + '6. ACTION ITEMS — Specific actions Elemex is taking or requesting, with owners and due dates where known.\n\n'
+    + '7. UPCOMING MILESTONES — Next 30 days, focused on panel deliveries, drawing submittals, approvals, or installation readiness dates. Include specific dates from the schedule where available.\n\n'
+    + '8. Professional closing signed by ' + (senderName || 'Elemex Project Manager') + '\n\n'
+    + 'Important: Write entirely from Elemex\'s perspective as the facade panel designer and supplier. Do not write from the installer\'s perspective. Do not mention budgets, costs, or financials.';
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',

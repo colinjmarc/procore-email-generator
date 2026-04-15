@@ -33,7 +33,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 .generate-btn:disabled { background: #ccc; cursor: not-allowed; }
 .error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
 .output-area { display: none; margin-top: 20px; }
-.output-area textarea { min-height: 500px; font-size: 14px; line-height: 1.6; }
+.output-area textarea { min-height: 500px; font-size: 14px; line-height: 1.6; font-family: 'Courier New', monospace; }
 .copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
 .copy-btn:hover { background: #1e4d1e; }
 .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
@@ -90,35 +90,36 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
     <div class="step-header"><div class="step-num">3</div><h2>Email Preferences</h2></div>
     <div class="two-col">
       <div>
-        <label for="projectName">Project Name</label>
-        <input type="text" id="projectName" placeholder="e.g. New Southwest Community Centre">
+        <label for="clientName">Client Name</label>
+        <input type="text" id="clientName" placeholder="e.g. John Smith">
       </div>
       <div>
-        <label for="senderName">Sender Name</label>
-        <input type="text" id="senderName" placeholder="e.g. John Smith, OP-ELX">
+        <label for="projectName">Project Name</label>
+        <input type="text" id="projectName" placeholder="e.g. New Southwest Community Centre">
       </div>
     </div>
     <div class="two-col">
       <div>
-        <label for="audience">Audience</label>
-        <select id="audience">
-          <option>Client</option>
-          <option>Subcontractors</option>
-          <option>Internal Team</option>
-          <option>All Stakeholders</option>
-        </select>
+        <label for="meetingDate">Meeting Date</label>
+        <input type="text" id="meetingDate" placeholder="e.g. April 15, 2026">
       </div>
       <div>
-        <label for="tone">Tone</label>
-        <select id="tone">
-          <option>Professional</option>
-          <option>Concise and Direct</option>
-          <option>Detailed and Formal</option>
-        </select>
+        <label for="nextMeeting">Next Meeting</label>
+        <input type="text" id="nextMeeting" placeholder="e.g. April 22, 2026 at 10:00 AM">
+      </div>
+    </div>
+    <div class="two-col">
+      <div>
+        <label for="senderName">Sender Name</label>
+        <input type="text" id="senderName" placeholder="e.g. John Smith, Elemex">
+      </div>
+      <div>
+        <label for="reviewDeadline">Review Deadline</label>
+        <input type="text" id="reviewDeadline" placeholder="e.g. April 18, 2026">
       </div>
     </div>
     <label for="extraInstructions">Additional Instructions (optional)</label>
-    <input type="text" id="extraInstructions" placeholder="e.g. Panels for floors 3-5 shipping next week, RFI submitted for anchor spacing">
+    <input type="text" id="extraInstructions" placeholder="e.g. Panels for floors 3-5 shipping next week, anchor RFI pending response">
   </div>
 
   <div class="card">
@@ -215,10 +216,12 @@ function handleTranscript(file) {
 
 function generateEmail() {
   var apiKey = document.getElementById('apiKey').value.trim();
-  var projectName = document.getElementById('projectName').value.trim();
-  var senderName = document.getElementById('senderName').value.trim();
-  var audience = document.getElementById('audience').value;
-  var tone = document.getElementById('tone').value;
+  var clientName = document.getElementById('clientName').value.trim() || 'Team';
+  var projectName = document.getElementById('projectName').value.trim() || 'Construction Project';
+  var meetingDate = document.getElementById('meetingDate').value.trim() || 'today';
+  var nextMeeting = document.getElementById('nextMeeting').value.trim() || 'TBD';
+  var senderName = document.getElementById('senderName').value.trim() || 'Elemex Project Manager';
+  var reviewDeadline = document.getElementById('reviewDeadline').value.trim() || 'TBD';
   var extra = document.getElementById('extraInstructions').value.trim();
   var transcript = document.getElementById('transcriptText').value.trim();
   var errorBox = document.getElementById('errorBox');
@@ -234,44 +237,49 @@ function generateEmail() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
-  var prompt = 'You are a project coordinator at Elemex. Elemex designs and supplies architectural facade panels to installing contractors. Elemex does NOT install — scope is design, fabrication, and delivery only.\n\n'
-    + 'Generate a post-meeting status email using the exact template structure below. Be direct and factual. No pleasantries, no filler sentences, no fluff. Every point must be grounded in the actual data provided.\n\n'
+  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels. Elemex does NOT install — scope is design, fabrication, and delivery only. Write entirely from Elemex\'s perspective.\n\n'
     + 'RULES:\n'
-    + '- No budgets, costs, or financials of any kind\n'
-    + '- No filler phrases like "I hope this finds you well" or "Please do not hesitate"\n'
-    + '- Write from Elemex\'s perspective as panel designer and supplier only\n'
-    + '- Critical path items come FIRST and must come directly from the Gantt chart\n'
-    + '- Cross-reference Gantt tasks against the transcript: if a critical path item was discussed, note it; if it was not discussed, flag it\n'
-    + '- Meeting discussion points form the rest of the email body — keep each point concise and direct\n\n'
-    + 'PROJECT: ' + (projectName || 'Construction Project') + '\n'
-    + 'AUDIENCE: ' + audience + '\n'
-    + 'TONE: ' + tone + '\n'
-    + 'SENDER: ' + (senderName || 'Elemex Project Manager') + '\n'
+    + '- Do NOT mention budgets, costs, or financials\n'
+    + '- Identify ALL critical path items from the Gantt chart that are upcoming or at risk — do not limit the number, include every one that matters\n'
+    + '- Cross-reference each critical path item against the meeting transcript to determine owner, risk, and impact\n'
+    + '- Additional action items come from the meeting transcript discussion points\n'
+    + '- Use the EXACT formatting shown in the template below — no deviations\n'
+    + '- Do not add any extra sections or commentary outside the template\n\n'
+    + 'PROJECT: ' + projectName + '\n'
+    + 'CLIENT NAME: ' + clientName + '\n'
+    + 'MEETING DATE: ' + meetingDate + '\n'
+    + 'NEXT MEETING: ' + nextMeeting + '\n'
+    + 'SENDER: ' + senderName + '\n'
+    + 'REVIEW DEADLINE: ' + reviewDeadline + '\n'
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
     + '\nGANTT CHART / SCHEDULE DATA:\n' + (ganttText || 'No Gantt chart provided')
     + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
-    + '\n\nUSE THIS EXACT EMAIL TEMPLATE:\n\n'
-    + 'SUBJECT: [Project name] – Post-Meeting Summary [date]\n\n'
-    + '[Greeting],\n\n'
-    + 'Please find below a summary of today\'s meeting and current schedule status.\n\n'
-    + '---\n'
-    + 'CRITICAL PATH – UPCOMING TASKS\n'
-    + '---\n'
-    + 'List each upcoming critical path task taken directly from the Gantt chart as a bullet point in this format:\n'
-    + '• [Task Name] — Due: [Date] — Status: [On Track / At Risk / Delayed] — Note: [one line if discussed in meeting or flagged as risk]\n\n'
-    + '---\n'
-    + 'MEETING DISCUSSION POINTS\n'
-    + '---\n'
-    + 'List each key point from the meeting transcript as a concise bullet. Frame each point from Elemex\'s perspective as panel designer and supplier. One line per point. No paragraph prose.\n'
-    + '• [Point]\n'
-    + '• [Point]\n\n'
-    + '---\n'
-    + 'ACTION ITEMS\n'
-    + '---\n'
-    + '• [Action] — Owner: [Name or Elemex/Contractor] — Due: [Date]\n\n'
-    + '---\n\n'
-    + 'Regards,\n'
-    + (senderName || 'Elemex Project Manager');
+    + '\n\nOUTPUT THE EMAIL USING THIS EXACT TEMPLATE — replace all bracketed placeholders with real content:\n\n'
+    + 'SUBJECT: ' + projectName + ' \u2013 Post-Meeting Summary ' + meetingDate + '\n\n'
+    + 'Hi ' + clientName + ',\n\n'
+    + 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.\n\n'
+    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
+    + '\ud83d\udd34 CRITICAL PATH ITEMS\n'
+    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
+    + 'For each critical path item from the Gantt (number them starting at 1), use this format:\n'
+    + '[number]. [Critical Item Title]\n'
+    + '   \u2022 Owner: [Name / Team]\n'
+    + '   \u2022 Due Date: [Date]\n'
+    + '   \u2022 Impact if Delayed: [One sentence describing consequence to facade panel installation schedule]\n\n'
+    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
+    + 'ADDITIONAL ACTION ITEMS\n'
+    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
+    + 'List each action item from the meeting transcript (not already covered in critical path) using this format:\n'
+    + '\u2022 [Action Item] \u2013 Owner: [Name] | Due: [Date]\n\n'
+    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
+    + 'NEXT STEPS\n'
+    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
+    + '\u2022 Next Meeting: ' + nextMeeting + '\n'
+    + '\u2022 [Any other relevant next steps from the transcript]\n\n'
+    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
+    + 'Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.\n\n'
+    + 'Best regards,\n'
+    + senderName;
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -282,8 +290,8 @@ function generateEmail() {
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-      max_tokens: 2000
+      temperature: 0.3,
+      max_tokens: 2500
     })
   })
   .then(function(r) {

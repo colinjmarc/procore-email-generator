@@ -43,6 +43,10 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 </style>
 </head>
 <body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
 <div class="container">
 
   <header>
@@ -147,22 +151,44 @@ document.getElementById('transcriptFile').addEventListener('change', function() 
 document.getElementById('generateBtn').addEventListener('click', generateEmail);
 document.getElementById('copyBtn').addEventListener('click', copyEmail);
 
-function extractPdfText(file, cb) {
-  var r = new FileReader();
-  r.onload = function(e) {
-    var b = e.target.result, text = '';
-    var m = b.match(/\(([^\)]{2,300})\)/g);
-    if (m) text = m.map(function(x) { return x.slice(1,-1); }).filter(function(s) { return /[a-zA-Z]{2,}/.test(s); }).join(' ');
-    cb(text || 'PDF loaded (text extraction limited - may be image-based)');
-  };
-  r.readAsBinaryString(file);
+function extractPdfText(file) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var typedArray = new Uint8Array(e.target.result);
+      pdfjsLib.getDocument({ data: typedArray }).promise.then(function(pdf) {
+        var allText = [];
+        var pages = [];
+        for (var i = 1; i <= pdf.numPages; i++) {
+          pages.push(i);
+        }
+        var chain = Promise.resolve();
+        pages.forEach(function(pageNum) {
+          chain = chain.then(function() {
+            return pdf.getPage(pageNum).then(function(page) {
+              return page.getTextContent().then(function(content) {
+                var pageText = content.items.map(function(item) { return item.str; }).join(' ');
+                allText.push(pageText);
+              });
+            });
+          });
+        });
+        chain.then(function() {
+          resolve(allText.join('\n') || 'No text could be extracted from PDF');
+        });
+      }).catch(function() {
+        resolve('Could not parse PDF - please ensure it is a text-based PDF');
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
 }
 
 function handleGantt(file) {
   var info = document.getElementById('ganttInfo');
   info.style.display = 'block';
   info.textContent = 'Reading ' + file.name + '...';
-  extractPdfText(file, function(t) {
+  extractPdfText(file).then(function(t) {
     ganttText = t;
     info.textContent = 'Loaded: ' + file.name + ' (' + Math.round(file.size / 1024) + 'KB)';
   });
@@ -173,7 +199,7 @@ function handleTranscript(file) {
   info.style.display = 'block';
   info.textContent = 'Reading ' + file.name + '...';
   if (file.name.toLowerCase().endsWith('.pdf')) {
-    extractPdfText(file, function(t) {
+    extractPdfText(file).then(function(t) {
       transcriptContent = t;
       document.getElementById('transcriptText').value = t;
       info.textContent = 'Loaded: ' + file.name;
@@ -210,8 +236,8 @@ function generateEmail() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
-  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels to installers on construction projects. Elemex does NOT install panels — we design them, manufacture them, and deliver them so the installing contractor can do their work on schedule.\n\n'
-    + 'Your job is to write a project status email from Elemex\'s point of view. Focus entirely on panel design, fabrication, delivery schedules, and how Elemex\'s scope impacts or supports the installer\'s upcoming work on the critical path. Do NOT mention budgets, costs, payments, or financial information of any kind.\n\n'
+  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels to installers on construction projects. Elemex does NOT install panels — we design them, fabricate them, and deliver them so the installing contractor can proceed on schedule.\n\n'
+    + 'Write a project status email entirely from Elemex\'s point of view as the facade panel designer and supplier. Focus on panel design status, fabrication progress, upcoming deliveries, drawing submittals, and how Elemex\'s scope supports the installer\'s critical path. Do NOT mention budgets, costs, payments, or any financial information.\n\n'
     + 'PROJECT: ' + (projectName || 'Construction Project') + '\n'
     + 'AUDIENCE: ' + audience + '\n'
     + 'TONE: ' + tone + '\n'
@@ -219,16 +245,16 @@ function generateEmail() {
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
     + '\nGANTT CHART / SCHEDULE DATA:\n' + (ganttText || 'No Gantt chart provided')
     + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
-    + '\n\nWrite a complete professional email with the following sections:\n\n'
+    + '\n\nWrite a complete professional email with these sections:\n\n'
     + '1. SUBJECT: (one concise line)\n\n'
     + '2. Greeting appropriate for ' + audience + '\n\n'
-    + '3. PROJECT STATUS OVERVIEW — 2 to 3 sentences summarizing overall project progress as it relates to Elemex\'s scope (panel design, fabrication, delivery). No budget talk.\n\n'
-    + '4. CRITICAL PATH — UPCOMING PANEL-RELATED TASKS: List the next key tasks from the Gantt schedule that are on or affect the critical path, specifically those tied to facade panel installation. Include task names and dates. Flag any tasks at risk of delay.\n\n'
-    + '5. KEY POINTS FROM MEETING — From Elemex\'s perspective as designer and supplier: what decisions, concerns, or updates from the transcript are relevant to our scope. Reframe any installer-focused points to reflect what Elemex needs to do or respond to.\n\n'
-    + '6. ACTION ITEMS — Specific actions Elemex is taking or requesting, with owners and due dates where known.\n\n'
-    + '7. UPCOMING MILESTONES — Next 30 days, focused on panel deliveries, drawing submittals, approvals, or installation readiness dates. Include specific dates from the schedule where available.\n\n'
+    + '3. PROJECT STATUS OVERVIEW: 2-3 sentences on overall progress as it relates to Elemex\'s scope (panel design, fabrication, delivery). No financials.\n\n'
+    + '4. CRITICAL PATH — UPCOMING TASKS: List the next key schedule tasks on or affecting the critical path, specifically related to facade panel installation readiness. Include task names and dates from the Gantt. Flag any items at risk.\n\n'
+    + '5. KEY POINTS FROM MEETING: Summarize relevant discussion points strictly from Elemex\'s perspective as designer and supplier. Reframe any installer-focused items to reflect what they mean for Elemex\'s deliverables.\n\n'
+    + '6. ACTION ITEMS: Specific actions Elemex is taking or requesting, with owners and due dates.\n\n'
+    + '7. UPCOMING MILESTONES (next 30 days): Panel deliveries, drawing submittals, approvals, installation readiness dates. Use specific dates from the schedule where available.\n\n'
     + '8. Professional closing signed by ' + (senderName || 'Elemex Project Manager') + '\n\n'
-    + 'Important: Write entirely from Elemex\'s perspective as the facade panel designer and supplier. Do not write from the installer\'s perspective. Do not mention budgets, costs, or financials.';
+    + 'Write entirely from Elemex\'s perspective. Never mention budgets, costs, or financials.';
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',

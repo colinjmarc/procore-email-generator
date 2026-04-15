@@ -5,237 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Procore Email Generator</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; color: #333; }
-.header { background: #f47b20; color: white; padding: 18px 32px; display: flex; align-items: center; gap: 16px; }
-.header h1 { font-size: 22px; font-weight: 600; }
-.header span { font-size: 13px; opacity: 0.85; }
-.container { max-width: 920px; margin: 32px auto; padding: 0 24px; }
-.card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 28px; margin-bottom: 24px; }
-.card h2 { font-size: 16px; font-weight: 600; color: #f47b20; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-.sub { font-size: 13px; color: #888; margin-bottom: 18px; padding-left: 32px; }
-.step { background: #f47b20; color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #555; }
-input[type=text], input[type=password], select, textarea { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
-input:focus, select:focus, textarea:focus { border-color: #f47b20; box-shadow: 0 0 0 3px rgba(244,123,32,0.1); }
-textarea { resize: vertical; min-height: 130px; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
-.btn-primary { background: #f47b20; color: white; } .btn-primary:hover { background: #d96a10; }
-.btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-.btn-secondary { background: #eee; color: #333; } .btn-success { background: #28a745; color: white; }
-.status { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 12px; display: none; }
-.status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
-.status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
-.status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; display: block; }
-.status.loading { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; display: block; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.urow { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
-.ubox { border: 2px dashed #ddd; border-radius: 8px; padding: 22px; text-align: center; cursor: pointer; transition: all 0.2s; }
-.ubox:hover { border-color: #f47b20; background: #fff8f3; }
-.ubox.done { border-color: #28a745; background: #f0fff4; }
-.ubox input { display: none; }
-.ubox .icon { font-size: 30px; margin-bottom: 8px; }
-.ubox .un { font-size: 13px; font-weight: 600; color: #333; }
-.ubox .uh { font-size: 12px; color: #aaa; margin-top: 4px; }
-.ubox .uf { font-size: 13px; color: #28a745; font-weight: 500; margin-top: 6px; }
-.or-div { display: flex; align-items: center; gap: 12px; margin: 16px 0 12px; color: #aaa; font-size: 13px; }
-.or-div::before, .or-div::after { content:''; flex:1; height:1px; background:#eee; }
-.actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-.hidden { display: none !important; }
-.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.kw { position: relative; } .kw input { padding-right: 60px; }
-.kb { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #f47b20; cursor: pointer; background: none; border: none; font-weight: 500; }
-.esubj { font-weight: 600; font-size: 15px; padding: 10px 14px; background: #fff3e0; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #f47b20; }
-.ebody { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; min-height: 200px; }
-.tip { background: #fff8f0; border: 1px solid #ffd9b3; border-radius: 8px; padding: 14px 18px; font-size: 13px; color: #7a4200; margin-bottom: 18px; line-height: 1.6; }
-.tip strong { color: #f47b20; }
-.fprev { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 13px; color: #155724; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  header { background: #e07b00; color: white; padding: 20px 30px; margin-bottom: 30px; border-radius: 8px; }
+  header h1 { font-size: 24px; }
+  header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+  .card { background: white; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .step-num { background: #e07b00; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; flex-shrink: 0; }
+  .step-header h2 { font-size: 18px; color: #333; }
+  label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; margin-top: 14px; }
+  input[type="text"], input[type="password"], textarea, select {
+    width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;
+    font-size: 14px; font-family: inherit; transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00; }
+  .api-key-wrap { position: relative; }
+  .api-key-wrap input { padding-right: 60px; }
+  .show-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #e07b00; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+  .upload-area:hover, .upload-area.drag-over { border-color: #e07b00; background: #fff8f0; }
+  .upload-area .icon { font-size: 36px; margin-bottom: 8px; }
+  .upload-area p { font-weight: 600; color: #444; }
+  .upload-area small { color: #888; font-size: 12px; }
+  .file-info { background: #f0f9f0; border: 1px solid #b8e0b8; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #2d6a2d; display: none; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .generate-btn { background: #e07b00; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+  .generate-btn:hover { background: #c96a00; }
+  .generate-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
+  .output-area { display: none; }
+  .output-area textarea { min-height: 400px; font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+  .copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+  .copy-btn:hover { background: #1e4d1e; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .groq-link { font-size: 12px; color: #888; margin-top: 4px; }
+  .groq-link a { color: #e07b00; }
 </style>
 </head>
 <body>
-<div class="header">
-  <span style="font-weight:700;font-size:18px;">OP - ELX</span>
-  <div style="width:1px;height:32px;background:rgba(255,255,255,0.35);margin:0 10px;"></div>
-  <div><h1>Project Email Generator</h1><span>Procore Gantt PDF + Meeting Transcript + Gemini AI</span></div>
-</div>
 <div class="container">
+  <header>
+    <h1>📋 Procore Project Email Generator</h1>
+    <p>Upload your Gantt chart PDF and meeting transcript to auto-generate a project status email</p>
+  </header>
 
-<div class="card">
-  <h2><span class="step">1</span> Gemini AI API Key</h2>
-  <p class="sub">Used only in your browser. Never stored or shared.</p>
-  <div class="kw" style="max-width:480px;">
-    <input type="password" id="gKey" placeholder="AIza..." />
-    <button class="kb" onclick="tk('gKey',this)">Show</button>
-  </div>
-</div>
-
-<div class="card">
-  <h2><span class="step">2</span> Upload Files</h2>
-  <p class="sub">Upload your Procore Gantt chart PDF and your meeting transcript.</p>
-  <div class="tip">
-    <strong>How to export your Gantt from Procore:</strong><br>
-    Project &rarr; Scheduling &rarr; click the <strong>export or print icon</strong> in the toolbar &rarr; <strong>Export to PDF</strong>. Upload that file below.
-  </div>
-  <div class="urow">
-    <div>
-      <label>Procore Gantt Chart (PDF)</label>
-      <div class="ubox" id="pdfBox" onclick="document.getElementById('pdfF').click()">
-        <input type="file" id="pdfF" accept=".pdf" onchange="handlePDF(event)">
-        <div class="icon">&#128202;</div>
-        <div class="un">Click to upload Gantt PDF</div>
-        <div class="uh">Export from Procore Scheduling as PDF</div>
-        <div class="uf hidden" id="pdfFN"></div>
-      </div>
-      <div id="pdfPrev"></div>
+  <!-- Step 1: API Key -->
+  <div class="card">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <h2>Enter Your Groq API Key</h2>
     </div>
-    <div>
-      <label>Meeting Transcript</label>
-      <div class="ubox" id="tBox" onclick="document.getElementById('tF').click()">
-        <input type="file" id="tF" accept=".txt,.pdf,.doc,.docx" onchange="handleTrans(event)">
-        <div class="icon">&#128196;</div>
-        <div class="un">Click to upload transcript</div>
-        <div class="uh">Supports .txt, .pdf, .doc, .docx</div>
-        <div class="uf hidden" id="tFN"></div>
-      </div>
-      <div id="tPrev"></div>
-    </div>
-  </div>
-  <div class="or-div">or paste transcript text below</div>
-  <textarea id="tPaste" placeholder="Paste meeting transcript here..."></textarea>
-  <div id="upSt"></div>
-</div>
-
-<div class="card">
-  <h2><span class="step">3</span> Email Preferences</h2>
-  <p class="sub">Customize the output for your audience.</p>
-  <div class="grid-2">
-    <div><label>Project Name</label><input type="text" id="pName" placeholder="e.g. 62433 - New Southwest Community Centre" /></div>
-    <div><label>Sender Name</label><input type="text" id="sender" placeholder="e.g. John Smith, OP-ELX" /></div>
-  </div>
-  <div class="grid-2" style="margin-top:14px;">
-    <div><label>Audience</label>
-      <select id="aud">
-        <option value="client">Client</option>
-        <option value="subcontractor">Subcontractors</option>
-        <option value="internal">Internal Team</option>
-        <option value="all">All Stakeholders</option>
-      </select>
-    </div>
-    <div><label>Email Tone</label>
-      <select id="tone">
-        <option value="professional">Professional</option>
-        <option value="concise">Concise and Direct</option>
-        <option value="detailed">Detailed and Formal</option>
-      </select>
-    </div>
-  </div>
-  <div style="margin-top:14px;">
-    <label>Additional Instructions (optional)</label>
-    <textarea id="extra" placeholder="e.g. Flag the roofing delay, mention site inspection on April 20..." style="min-height:70px;"></textarea>
-  </div>
-</div>
-
-<div class="card">
-  <h2><span class="step">4</span> Generate Email</h2>
-  <p class="sub">Gemini AI reads your Gantt PDF and transcript to write the email automatically.</p>
-  <button class="btn btn-primary" id="genBtn" onclick="genEmail()">&#10024; Generate Email with AI</button>
-  <div id="genSt"></div>
-</div>
-
-<div class="card hidden" id="outCard">
-  <h2>&#128231; Generated Email</h2>
-  <div id="eSubj" class="esubj"></div>
-  <div id="eBody" class="ebody"></div>
-  <div class="actions">
-    <button class="btn btn-success" onclick="copyAll()">&#128203; Copy Full Email</button>
-    <button class="btn btn-secondary" onclick="copySubj()">Copy Subject Only</button>
-    <button class="btn btn-secondary" onclick="genEmail()">&#128260; Regenerate</button>
-  </div>
-  <div id="cpSt"></div>
-</div>
-</div>
-
-<script>
-var pdfB64='', pdfTxt='', transTxt='';
-
-async function handlePDF(e) {
-  var f=e.target.files[0]; if(!f) return;
-  try {
-    var ab=await f.arrayBuffer(), bytes=new Uint8Array(ab), bin='', raw='';
-    for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
-    pdfB64=btoa(bin);
-    for(var i=0;i<bytes.length;i++){var c=bytes[i];if(c>31&&c<127)raw+=String.fromCharCode(c);else if(c===10||c===13)raw+='\n';}
-    pdfTxt=raw.replace(/\s{4,}/g,' ').trim().substring(0,20000);
-    document.getElementById('pdfBox').classList.add('done');
-    var fn=document.getElementById('pdfFN');
-    fn.textContent='Loaded: '+f.name+' ('+(f.size/1048576).toFixed(1)+' MB)';
-    fn.classList.remove('hidden');
-    var pn=document.getElementById('pName');
-    if(!pn.value) pn.value=f.name.replace(/\.pdf$/i,'').replace(/[_-]/g,' ');
-    document.getElementById('pdfPrev').innerHTML='<div class="fprev">Gantt PDF ready: '+f.name+'</div>';
-    setS('upSt','success','Gantt PDF loaded successfully.');
-  } catch(err){setS('upSt','error','Error reading PDF: '+err.message);}
-}
-
-async function handleTrans(e) {
-  var f=e.target.files[0]; if(!f) return;
-  try {
-    if(f.name.toLowerCase().endsWith('.txt')){transTxt=await f.text();}
-    else{var ab=await f.arrayBuffer(),b=new Uint8Array(ab),t='';for(var i=0;i<b.length;i++){var c=b[i];if(c>31&&c<127)t+=String.fromCharCode(c);else if(c===10||c===13)t+='\n';}transTxt=t.replace(/\s{3,}/g,' ').trim().substring(0,15000);}
-    document.getElementById('tBox').classList.add('done');
-    var fn=document.getElementById('tFN');fn.textContent='Loaded: '+f.name;fn.classList.remove('hidden');
-    document.getElementById('tPrev').innerHTML='<div class="fprev">Transcript ready: '+f.name+'</div>';
-  } catch(err){var fn=document.getElementById('tFN');fn.textContent='Error: '+err.message;fn.classList.remove('hidden');}
-}
-
-async function genEmail() {
-  var gk=document.getElementById('gKey').value.trim();
-  var pn=document.getElementById('pName').value.trim()||'Project';
-  var tr=document.getElementById('tPaste').value.trim()||transTxt;
-  var au=document.getElementById('aud').value;
-  var sn=document.getElementById('sender').value.trim();
-  var ex=document.getElementById('extra').value.trim();
-  var tn=document.getElementById('tone').value;
-  if(!gk){setS('genSt','error','Please enter your Gemini API key.');return;}
-  if(!pdfB64){setS('genSt','error','Please upload your Procore Gantt chart PDF.');return;}
-  if(!tr){setS('genSt','error','Please upload or paste your meeting transcript.');return;}
-  var btn=document.getElementById('genBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analyzing PDF and generating email...';
-  setS('genSt','loading','Gemini AI is reading your Gantt chart and transcript...');
-  var am={client:'the project client/owner',subcontractor:'subcontractors and trades on site',internal:'the internal project management team',all:'all project stakeholders'};
-  var tm={professional:'professional and clear',concise:'concise and direct, use bullet points where helpful',detailed:'detailed and formal with full context'};
-  var now=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  var basePrompt='You are a senior construction project manager at OP-ELX.\nPROJECT: '+pn+'\nAUDIENCE: '+(am[au]||'stakeholders')+'\n'+(sn?'FROM: '+sn+'\n':'')+'DATE: '+now+'\nTONE: '+(tm[tn]||'professional')+'\n'+(ex?'SPECIAL INSTRUCTIONS: '+ex+'\n':'')+'\n--- MEETING TRANSCRIPT ---\n'+tr.substring(0,6000)+'\n\nFrom the Gantt chart, identify: overall completion %, overdue or behind-schedule tasks, critical path items, tasks underway, upcoming milestones in 30 days, and schedule risks.\n\nWrite the email with:\n1. SUBJECT: [specific subject line with project name]\n2. Greeting\n3. Project Status Overview (2-3 sentences)\n4. Critical Path and Schedule Risks (specific task names and dates)\n5. Key Discussion Points from Meeting (bullet points)\n6. Action Items and Owners (from transcript)\n7. Upcoming Milestones next 30 days (with dates)\n8. Professional closing with sender name';
-  try {
-    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+gk,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:'application/pdf',data:pdfB64}},{text:basePrompt}]}],generationConfig:{temperature:0.35,maxOutputTokens:2500}})});
-    var res=await resp.json();
-    var txt=res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text;
-    if(!resp.ok||!txt) {
-      setS('genSt','loading','Processing schedule data...');
-      var prompt2='You are a senior construction project manager at OP-ELX. Analyze this Procore schedule and meeting transcript.\nPROJECT: '+pn+'\nAUDIENCE: '+(am[au]||'stakeholders')+'\n'+(sn?'FROM: '+sn+'\n':'')+'DATE: '+now+'\nTONE: '+(tm[tn]||'professional')+'\n'+(ex?'SPECIAL INSTRUCTIONS: '+ex+'\n':'')+'\n--- PROCORE SCHEDULE (from Gantt PDF) ---\n'+pdfTxt.substring(0,8000)+'\n\n--- MEETING TRANSCRIPT ---\n'+tr.substring(0,5000)+'\n\nWrite email with:\n1. SUBJECT: [subject]\n2. Greeting\n3. Project Status Overview\n4. Critical Path and Schedule Risks\n5. Key Discussion Points\n6. Action Items and Owners\n7. Upcoming Milestones 30 days\n8. Professional closing';
-      resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+gk,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt2}]}],generationConfig:{temperature:0.35,maxOutputTokens:2500}})});
-      res=await resp.json();
-      txt=res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text;
-    }
-    if(!resp.ok) throw new Error((res.error&&res.error.message)||'Gemini error '+resp.status);
-    if(!txt) throw new Error('No response from Gemini. Please verify your API key is valid and has credits.');
-    var sm=txt.match(/SUBJECT:\s*(.+?)\n/);
-    var subj=sm?sm[1].trim():'Project Status Update - '+pn;
-    var body=txt.replace(/SUBJECT:\s*.+?\n/,'').trim();
-    document.getElementById('eSubj').textContent='Subject: '+subj;
-    document.getElementById('eBody').textContent=body;
-    document.getElementById('outCard').classList.remove('hidden');
-    document.getElementById('outCard').scrollIntoView({behavior:'smooth'});
-    setS('genSt','success','Email generated successfully!');
-  } catch(err){setS('genSt','error',err.message);}
-  finally{btn.disabled=false;btn.innerHTML='&#10024; Generate Email with AI';}
-}
-
-function setS(id,t,m){var el=document.getElementById(id);if(!el)return;el.className='status '+t;el.textContent=m;}
-function tk(id,btn){var i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'Show':'Hide';}
-async function copyAll(){var s=document.getElementById('eSubj').textContent.replace('Subject: ','');var b=document.getElementById('eBody').textContent;try{await navigator.clipboard.writeText('Subject: '+s+'\n\n'+b);setS('cpSt','success','Copied to clipboard!');}catch(e){setS('cpSt','error','Please select and copy manually.');}}
-async function copySubj(){try{await navigator.clipboard.writeText(document.getElementById('eSubj').textContent.replace('Subject: ',''));setS('cpSt','success','Subject copied!');}catch(e){}}
-</script>
-</body>
-</html>
+    <label for="apiKe

@@ -5,102 +5,85 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Procore Email Generator</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
-  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-  header { background: #e07b00; color: white; padding: 20px 30px; margin-bottom: 30px; border-radius: 8px; }
-  header h1 { font-size: 24px; }
-  header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
-  .card { background: white; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .step-num { background: #e07b00; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; flex-shrink: 0; }
-  .step-header h2 { font-size: 18px; color: #333; }
-  label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; margin-top: 14px; }
-  input[type="text"], input[type="password"], textarea, select {
-    width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;
-    font-size: 14px; font-family: inherit; transition: border-color 0.2s;
-  }
-  input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00; }
-  .api-key-wrap { position: relative; }
-  .api-key-wrap input { padding-right: 60px; }
-  .show-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #e07b00; cursor: pointer; font-size: 13px; font-weight: 600; }
-  .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
-  .upload-area:hover, .upload-area.drag-over { border-color: #e07b00; background: #fff8f0; }
-  .upload-area .icon { font-size: 36px; margin-bottom: 8px; }
-  .upload-area p { font-weight: 600; color: #444; }
-  .upload-area small { color: #888; font-size: 12px; }
-  .file-info { background: #f0f9f0; border: 1px solid #b8e0b8; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #2d6a2d; display: none; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .generate-btn { background: #e07b00; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
-  .generate-btn:hover { background: #c96a00; }
-  .generate-btn:disabled { background: #ccc; cursor: not-allowed; }
-  .error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
-  .output-area { display: none; }
-  .output-area textarea { min-height: 400px; font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
-  .copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
-  .copy-btn:hover { background: #1e4d1e; }
-  .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .groq-link { font-size: 12px; color: #888; margin-top: 4px; }
-  .groq-link a { color: #e07b00; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+.container { max-width: 900px; margin: 0 auto; padding: 20px; }
+header { background: #e07b00; color: white; padding: 20px 30px; margin-bottom: 30px; border-radius: 8px; }
+header h1 { font-size: 24px; }
+header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+.card { background: white; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.step-num { background: #e07b00; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; flex-shrink: 0; }
+.step-header h2 { font-size: 18px; color: #333; }
+label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; margin-top: 14px; }
+input[type="text"], input[type="password"], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00; }
+.api-key-wrap { position: relative; }
+.api-key-wrap input { padding-right: 60px; }
+.show-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #e07b00; cursor: pointer; font-size: 13px; font-weight: 600; }
+.upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 8px; }
+.upload-area:hover { border-color: #e07b00; background: #fff8f0; }
+.upload-area .icon { font-size: 36px; margin-bottom: 8px; }
+.upload-area p { font-weight: 600; color: #444; }
+.upload-area small { color: #888; font-size: 12px; }
+.file-info { background: #f0f9f0; border: 1px solid #b8e0b8; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #2d6a2d; display: none; margin-bottom: 8px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.generate-btn { background: #e07b00; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+.generate-btn:hover { background: #c96a00; }
+.generate-btn:disabled { background: #ccc; cursor: not-allowed; }
+.error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
+.output-area { display: none; margin-top: 20px; }
+.output-area textarea { min-height: 400px; font-size: 14px; line-height: 1.6; }
+.copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+.copy-btn:hover { background: #1e4d1e; }
+.spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.groq-link { font-size: 12px; color: #888; margin-top: 6px; }
+.groq-link a { color: #e07b00; }
 </style>
 </head>
 <body>
 <div class="container">
+
   <header>
-    <h1>📋 Procore Project Email Generator</h1>
+    <h1>Procore Project Email Generator</h1>
     <p>Upload your Gantt chart PDF and meeting transcript to auto-generate a project status email</p>
   </header>
 
-  <!-- Step 1: API Key -->
   <div class="card">
-    <div class="step-header">
-      <div class="step-num">1</div>
-      <h2>Enter Your Groq API Key</h2>
-    </div>
+    <div class="step-header"><div class="step-num">1</div><h2>Enter Your Groq API Key</h2></div>
     <label for="apiKey">Groq API Key</label>
     <div class="api-key-wrap">
       <input type="password" id="apiKey" placeholder="gsk_...">
-      <button class="show-btn" onclick="toggleKey()">Show</button>
+      <button class="show-btn" id="showBtn" type="button">Show</button>
     </div>
-    <p class="groq-link">Get a free API key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — no credit card required</p>
+    <p class="groq-link">Free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — no credit card required</p>
   </div>
 
-  <!-- Step 2: Upload Files -->
   <div class="card">
-    <div class="step-header">
-      <div class="step-num">2</div>
-      <h2>Upload Files</h2>
-    </div>
-
+    <div class="step-header"><div class="step-num">2</div><h2>Upload Files</h2></div>
     <label>Gantt Chart PDF (exported from Procore)</label>
-    <div class="upload-area" id="ganttDrop" onclick="document.getElementById('ganttFile').click()">
-      <div class="icon">📊</div>
+    <div class="upload-area" id="ganttDrop">
+      <div class="icon">&#128202;</div>
       <p>Click to upload Gantt chart PDF</p>
       <small>Supports .pdf</small>
     </div>
-    <input type="file" id="ganttFile" accept=".pdf" style="display:none" onchange="handleGantt(this)">
+    <input type="file" id="ganttFile" accept=".pdf" style="display:none">
     <div class="file-info" id="ganttInfo"></div>
-
     <label>Meeting Transcript</label>
-    <div class="upload-area" id="transcriptDrop" onclick="document.getElementById('transcriptFile').click()">
-      <div class="icon">🎙️</div>
+    <div class="upload-area" id="transcriptDrop">
+      <div class="icon">&#127897;</div>
       <p>Click to upload transcript</p>
       <small>Supports .txt, .pdf, .doc, .docx</small>
     </div>
-    <input type="file" id="transcriptFile" accept=".txt,.pdf,.doc,.docx" style="display:none" onchange="handleTranscript(this)">
+    <input type="file" id="transcriptFile" accept=".txt,.pdf,.doc,.docx" style="display:none">
     <div class="file-info" id="transcriptInfo"></div>
-
     <label>Or paste transcript text directly:</label>
     <textarea id="transcriptText" rows="5" placeholder="Paste meeting transcript here..."></textarea>
   </div>
 
-  <!-- Step 3: Email Preferences -->
   <div class="card">
-    <div class="step-header">
-      <div class="step-num">3</div>
-      <h2>Email Preferences</h2>
-    </div>
+    <div class="step-header"><div class="step-num">3</div><h2>Email Preferences</h2></div>
     <div class="two-col">
       <div>
         <label for="projectName">Project Name</label>
@@ -125,8 +108,8 @@
         <label for="tone">Tone</label>
         <select id="tone">
           <option>Professional</option>
-          <option>Concise &amp; Direct</option>
-          <option>Detailed &amp; Formal</option>
+          <option>Concise and Direct</option>
+          <option>Detailed and Formal</option>
         </select>
       </div>
     </div>
@@ -134,215 +117,171 @@
     <input type="text" id="extraInstructions" placeholder="e.g. Emphasize the concrete pour milestone, mention weather delays">
   </div>
 
-  <!-- Step 4: Generate -->
   <div class="card">
-    <div class="step-header">
-      <div class="step-num">4</div>
-      <h2>Generate Email</h2>
-    </div>
-    <p style="font-size:13px; color:#666; margin-bottom:12px;">AI reads your Gantt PDF and transcript to write the email automatically.</p>
-    <button class="generate-btn" id="generateBtn" onclick="generateEmail()">✨ Generate Email with AI</button>
+    <div class="step-header"><div class="step-num">4</div><h2>Generate Email</h2></div>
+    <p style="font-size:13px;color:#666;margin-bottom:12px;">AI reads your Gantt PDF and transcript to write the email automatically.</p>
+    <button class="generate-btn" id="generateBtn" type="button">&#10024; Generate Email with AI</button>
     <div class="error-box" id="errorBox"></div>
-
-    <div class="output-area" id="outputArea" style="margin-top:20px;">
+    <div class="output-area" id="outputArea">
       <label>Generated Email</label>
       <textarea id="emailOutput" readonly></textarea>
-      <button class="copy-btn" onclick="copyEmail()">📋 Copy to Clipboard</button>
+      <button class="copy-btn" id="copyBtn" type="button">&#128203; Copy to Clipboard</button>
     </div>
   </div>
+
 </div>
-
 <script>
-  let ganttText = '';
-  let transcriptTextContent = '';
+var ganttText = '';
+var transcriptContent = '';
 
-  function toggleKey() {
-    const inp = document.getElementById('apiKey');
-    const btn = event.target;
-    if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'Hide'; }
-    else { inp.type = 'password'; btn.textContent = 'Show'; }
-  }
+document.getElementById('showBtn').addEventListener('click', function() {
+  var inp = document.getElementById('apiKey');
+  if (inp.type === 'password') { inp.type = 'text'; this.textContent = 'Hide'; }
+  else { inp.type = 'password'; this.textContent = 'Show'; }
+});
 
-  async function readFileAsText(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = e => resolve(e.target.result);
-      reader.readAsText(file);
-    });
-  }
+document.getElementById('ganttDrop').addEventListener('click', function() { document.getElementById('ganttFile').click(); });
+document.getElementById('transcriptDrop').addEventListener('click', function() { document.getElementById('transcriptFile').click(); });
+document.getElementById('ganttFile').addEventListener('change', function() { if (this.files[0]) handleGantt(this.files[0]); });
+document.getElementById('transcriptFile').addEventListener('change', function() { if (this.files[0]) handleTranscript(this.files[0]); });
+document.getElementById('generateBtn').addEventListener('click', generateEmail);
+document.getElementById('copyBtn').addEventListener('click', copyEmail);
 
-  async function readFileAsBase64(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = e => resolve(e.target.result.split(',')[1]);
-      reader.readAsDataURL(file);
-    });
-  }
+function extractPdfText(file, cb) {
+  var r = new FileReader();
+  r.onload = function(e) {
+    var b = e.target.result, text = '';
+    var m = b.match(/\(([^\)]{2,300})\)/g);
+    if (m) text = m.map(function(x) { return x.slice(1,-1); }).filter(function(s) { return /[a-zA-Z]{2,}/.test(s); }).join(' ');
+    cb(text || 'PDF loaded (text extraction limited - may be image-based)');
+  };
+  r.readAsBinaryString(file);
+}
 
-  async function extractPdfText(file) {
-    // Extract text from PDF using FileReader - reads raw content
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const binary = e.target.result;
-        // Extract readable text strings from PDF binary
-        let text = '';
-        const matches = binary.match(/\(([^)]{2,200})\)/g);
-        if (matches) {
-          text = matches.map(m => m.slice(1,-1)).filter(s => /[a-zA-Z]{2,}/.test(s)).join(' ');
-        }
-        // Also try to get BT...ET text blocks
-        const btMatches = binary.match(/BT[\s\S]*?ET/g);
-        if (btMatches) {
-          const btText = btMatches.map(block => {
-            const tjs = block.match(/\(([^)]+)\)/g);
-            return tjs ? tjs.map(t => t.slice(1,-1)).join(' ') : '';
-          }).join('\n');
-          text = text + '\n' + btText;
-        }
-        resolve(text.trim() || 'Could not extract text from PDF - please ensure it is a text-based PDF');
-      };
-      reader.readAsBinaryString(file);
-    });
-  }
-
-  async function handleGantt(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const info = document.getElementById('ganttInfo');
-    info.style.display = 'block';
-    info.textContent = `⏳ Reading ${file.name}...`;
-    ganttText = await extractPdfText(file);
-    info.textContent = `✅ ${file.name} loaded (${Math.round(file.size/1024)}KB)`;
-  }
-
-  async function handleTranscript(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const info = document.getElementById('transcriptInfo');
-    info.style.display = 'block';
-    info.textContent = `⏳ Reading ${file.name}...`;
-    if (file.name.endsWith('.pdf')) {
-      transcriptTextContent = await extractPdfText(file);
-    } else {
-      transcriptTextContent = await readFileAsText(file);
-    }
-    info.textContent = `✅ ${file.name} loaded`;
-    document.getElementById('transcriptText').value = transcriptTextContent;
-  }
-
-  async function generateEmail() {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const projectName = document.getElementById('projectName').value.trim();
-    const senderName = document.getElementById('senderName').value.trim();
-    const audience = document.getElementById('audience').value;
-    const tone = document.getElementById('tone').value;
-    const extraInstructions = document.getElementById('extraInstructions').value.trim();
-    const transcriptInput = document.getElementById('transcriptText').value.trim();
-    const errorBox = document.getElementById('errorBox');
-    const outputArea = document.getElementById('outputArea');
-    const btn = document.getElementById('generateBtn');
-
-    errorBox.style.display = 'none';
-    outputArea.style.display = 'none';
-
-    if (!apiKey) { showError('Please enter your Groq API key.'); return; }
-    if (!ganttText && !transcriptInput && !transcriptTextContent) { showError('Please upload a Gantt PDF and/or provide a meeting transcript.'); return; }
-
-    const transcript = transcriptInput || transcriptTextContent || '';
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Generating...';
-
-    const prompt = `You are a professional construction project manager assistant. Generate a project status email based on the following information.
-
-PROJECT NAME: ${projectName || 'Construction Project'}
-AUDIENCE: ${audience}
-TONE: ${tone}
-SENDER: ${senderName || 'Project Manager'}
-${extraInstructions ? 'SPECIAL INSTRUCTIONS: ' + extraInstructions : ''}
-
-GANTT CHART / SCHEDULE DATA:
-${ganttText || 'No Gantt chart provided'}
-
-MEETING TRANSCRIPT:
-${transcript || 'No transcript provided'}
-
-Generate a complete professional email with these sections:
-1. SUBJECT: (one line)
-2. Greeting appropriate for ${audience}
-3. Project Status Overview (2-3 sentences on overall progress)
-4. Critical Path & Schedule Risks (specific task names and dates from the schedule)
-5. Key Discussion Points from Meeting (bullet points)
-6. Action Items & Owners (who does what by when)
-7. Upcoming Milestones - next 30 days (with specific dates if available)
-8. Professional closing with sender name
-
-Write the full email ready to send. Use ${tone} tone throughout.`;
-
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-          max_tokens: 2000
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || `API error ${response.status}`);
-      }
-
-      const data = await response.json();
-      const email = data.choices[0].message.content;
-      document.getElementById('emailOutput').value = email;
-      outputArea.style.display = 'block';
-      outputArea.scrollIntoView({ behavior: 'smooth' });
-
-    } catch (err) {
-      showError(err.message);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '✨ Generate Email with AI';
-    }
-  }
-
-  function showError(msg) {
-    const box = document.getElementById('errorBox');
-    box.textContent = msg;
-    box.style.display = 'block';
-  }
-
-  function copyEmail() {
-    const text = document.getElementById('emailOutput').value;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = '✅ Copied!';
-      setTimeout(() => btn.textContent = '📋 Copy to Clipboard', 2000);
-    });
-  }
-
-  // Drag and drop
-  ['ganttDrop','transcriptDrop'].forEach(id => {
-    const el = document.getElementById(id);
-    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
-    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      el.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (!file) return;
-      if (id === 'ganttDrop') { document.getElementById('ganttFile').files = e.dataTransfer.files; handleGantt(document.getElementById('ganttFile')); }
-      else { document.getElementById('transcriptFile').files = e.dataTransfer.files; handleTranscript(document.getElementById('transcriptFile')); }
-    });
+function handleGantt(file) {
+  var info = document.getElementById('ganttInfo');
+  info.style.display = 'block';
+  info.textContent = 'Reading ' + file.name + '...';
+  extractPdfText(file, function(t) {
+    ganttText = t;
+    info.textContent = 'Loaded: ' + file.name + ' (' + Math.round(file.size / 1024) + 'KB)';
   });
+}
+
+function handleTranscript(file) {
+  var info = document.getElementById('transcriptInfo');
+  info.style.display = 'block';
+  info.textContent = 'Reading ' + file.name + '...';
+  if (file.name.toLowerCase().endsWith('.pdf')) {
+    extractPdfText(file, function(t) {
+      transcriptContent = t;
+      document.getElementById('transcriptText').value = t;
+      info.textContent = 'Loaded: ' + file.name;
+    });
+  } else {
+    var r = new FileReader();
+    r.onload = function(e) {
+      transcriptContent = e.target.result;
+      document.getElementById('transcriptText').value = transcriptContent;
+      info.textContent = 'Loaded: ' + file.name;
+    };
+    r.readAsText(file);
+  }
+}
+
+function generateEmail() {
+  var apiKey = document.getElementById('apiKey').value.trim();
+  var projectName = document.getElementById('projectName').value.trim();
+  var senderName = document.getElementById('senderName').value.trim();
+  var audience = document.getElementById('audience').value;
+  var tone = document.getElementById('tone').value;
+  var extra = document.getElementById('extraInstructions').value.trim();
+  var transcript = document.getElementById('transcriptText').value.trim();
+  var errorBox = document.getElementById('errorBox');
+  var outputArea = document.getElementById('outputArea');
+  var btn = document.getElementById('generateBtn');
+
+  errorBox.style.display = 'none';
+  outputArea.style.display = 'none';
+
+  if (!apiKey) { showError('Please enter your Groq API key.'); return; }
+  if (!ganttText && !transcript) { showError('Please upload a Gantt PDF and/or provide a meeting transcript.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Generating...';
+
+  var prompt = 'You are a professional construction project manager assistant. Generate a complete project status email.\n\n'
+    + 'PROJECT: ' + (projectName || 'Construction Project') + '\n'
+    + 'AUDIENCE: ' + audience + '\n'
+    + 'TONE: ' + tone + '\n'
+    + 'SENDER: ' + (senderName || 'Project Manager') + '\n'
+    + (extra ? 'SPECIAL INSTRUCTIONS: ' + extra + '\n' : '')
+    + '\nSCHEDULE/GANTT DATA:\n' + (ganttText || 'No Gantt chart provided')
+    + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
+    + '\n\nWrite a complete professional email with:\n'
+    + '1. SUBJECT line\n'
+    + '2. Greeting appropriate for ' + audience + '\n'
+    + '3. Project Status Overview (2-3 sentences)\n'
+    + '4. Critical Path and Schedule Risks (specific tasks and dates from the schedule)\n'
+    + '5. Key Discussion Points from Meeting (bullet points)\n'
+    + '6. Action Items and Owners (who does what by when)\n'
+    + '7. Upcoming Milestones next 30 days (with dates)\n'
+    + '8. Professional closing signed by ' + (senderName || 'Project Manager') + '\n\n'
+    + 'Write the full ready-to-send email now.';
+
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 2000
+    })
+  })
+  .then(function(r) {
+    if (!r.ok) return r.json().then(function(e) { throw new Error(e.error && e.error.message ? e.error.message : 'API error ' + r.status); });
+    return r.json();
+  })
+  .then(function(d) {
+    document.getElementById('emailOutput').value = d.choices[0].message.content;
+    outputArea.style.display = 'block';
+    outputArea.scrollIntoView({ behavior: 'smooth' });
+  })
+  .catch(function(e) { showError(e.message); })
+  .finally(function() { btn.disabled = false; btn.innerHTML = '&#10024; Generate Email with AI'; });
+}
+
+function showError(msg) {
+  var b = document.getElementById('errorBox');
+  b.textContent = msg;
+  b.style.display = 'block';
+}
+
+function copyEmail() {
+  navigator.clipboard.writeText(document.getElementById('emailOutput').value).then(function() {
+    var b = document.getElementById('copyBtn');
+    b.textContent = 'Copied!';
+    setTimeout(function() { b.innerHTML = '&#128203; Copy to Clipboard'; }, 2000);
+  });
+}
+
+['ganttDrop', 'transcriptDrop'].forEach(function(id) {
+  var el = document.getElementById(id);
+  el.addEventListener('dragover', function(e) { e.preventDefault(); el.style.borderColor = '#e07b00'; });
+  el.addEventListener('dragleave', function() { el.style.borderColor = '#ddd'; });
+  el.addEventListener('drop', function(e) {
+    e.preventDefault();
+    el.style.borderColor = '#ddd';
+    var f = e.dataTransfer.files[0];
+    if (!f) return;
+    if (id === 'ganttDrop') handleGantt(f);
+    else handleTranscript(f);
+  });
+});
 </script>
 </body>
 </html>

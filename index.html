@@ -158,21 +158,19 @@ function extractPdfText(file) {
       var typedArray = new Uint8Array(e.target.result);
       pdfjsLib.getDocument({ data: typedArray }).promise.then(function(pdf) {
         var allText = [];
-        var pages = [];
-        for (var i = 1; i <= pdf.numPages; i++) {
-          pages.push(i);
-        }
         var chain = Promise.resolve();
-        pages.forEach(function(pageNum) {
-          chain = chain.then(function() {
-            return pdf.getPage(pageNum).then(function(page) {
-              return page.getTextContent().then(function(content) {
-                var pageText = content.items.map(function(item) { return item.str; }).join(' ');
-                allText.push(pageText);
+        for (var i = 1; i <= pdf.numPages; i++) {
+          (function(pageNum) {
+            chain = chain.then(function() {
+              return pdf.getPage(pageNum).then(function(page) {
+                return page.getTextContent().then(function(content) {
+                  var pageText = content.items.map(function(item) { return item.str; }).join(' ');
+                  allText.push(pageText);
+                });
               });
             });
-          });
-        });
+          })(i);
+        }
         chain.then(function() {
           resolve(allText.join('\n') || 'No text could be extracted from PDF');
         });
@@ -236,25 +234,29 @@ function generateEmail() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
-  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels to installers on construction projects. Elemex does NOT install panels — we design them, fabricate them, and deliver them so the installing contractor can proceed on schedule.\n\n'
-    + 'Write a project status email entirely from Elemex\'s point of view as the facade panel designer and supplier. Focus on panel design status, fabrication progress, upcoming deliveries, drawing submittals, and how Elemex\'s scope supports the installer\'s critical path. Do NOT mention budgets, costs, payments, or any financial information.\n\n'
+  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels to installing contractors on construction projects. Elemex does NOT do any installation — our scope is panel design, fabrication, and delivery only.\n\n'
+    + 'IMPORTANT RULES:\n'
+    + '- The email body must be driven entirely by the key discussion points from the meeting transcript below\n'
+    + '- Every point in the email must reflect Elemex\'s perspective as the facade panel designer and supplier\n'
+    + '- Use the Gantt chart schedule data to add specific task names, dates, and critical path context to support the discussion points\n'
+    + '- Do NOT mention budgets, costs, payments, or any financial information\n'
+    + '- Do NOT write from the installer\'s perspective\n\n'
     + 'PROJECT: ' + (projectName || 'Construction Project') + '\n'
     + 'AUDIENCE: ' + audience + '\n'
     + 'TONE: ' + tone + '\n'
     + 'SENDER: ' + (senderName || 'Elemex Project Manager') + '\n'
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
-    + '\nGANTT CHART / SCHEDULE DATA:\n' + (ganttText || 'No Gantt chart provided')
-    + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
+    + '\nGANTT CHART / SCHEDULE DATA (use for dates, task names, and critical path context):\n' + (ganttText || 'No Gantt chart provided')
+    + '\n\nMEETING TRANSCRIPT (this is the PRIMARY source — the email body must be based on these discussion points):\n' + (transcript || 'No transcript provided')
     + '\n\nWrite a complete professional email with these sections:\n\n'
-    + '1. SUBJECT: (one concise line)\n\n'
+    + '1. SUBJECT: (one concise line reflecting the main topic from the meeting)\n\n'
     + '2. Greeting appropriate for ' + audience + '\n\n'
-    + '3. PROJECT STATUS OVERVIEW: 2-3 sentences on overall progress as it relates to Elemex\'s scope (panel design, fabrication, delivery). No financials.\n\n'
-    + '4. CRITICAL PATH — UPCOMING TASKS: List the next key schedule tasks on or affecting the critical path, specifically related to facade panel installation readiness. Include task names and dates from the Gantt. Flag any items at risk.\n\n'
-    + '5. KEY POINTS FROM MEETING: Summarize relevant discussion points strictly from Elemex\'s perspective as designer and supplier. Reframe any installer-focused items to reflect what they mean for Elemex\'s deliverables.\n\n'
-    + '6. ACTION ITEMS: Specific actions Elemex is taking or requesting, with owners and due dates.\n\n'
-    + '7. UPCOMING MILESTONES (next 30 days): Panel deliveries, drawing submittals, approvals, installation readiness dates. Use specific dates from the schedule where available.\n\n'
-    + '8. Professional closing signed by ' + (senderName || 'Elemex Project Manager') + '\n\n'
-    + 'Write entirely from Elemex\'s perspective. Never mention budgets, costs, or financials.';
+    + '3. OPENING SUMMARY: 2-3 sentences summarizing the purpose of this email based on what was discussed in the meeting, from Elemex\'s perspective as panel designer and supplier.\n\n'
+    + '4. KEY DISCUSSION POINTS: This is the main body of the email. For each significant topic raised in the meeting transcript, write a clear paragraph from Elemex\'s point of view. Where relevant, reference specific task names and dates from the Gantt schedule to show how each discussion point connects to the critical path.\n\n'
+    + '5. ACTION ITEMS: Bullet list of specific actions Elemex is committing to or requesting, with owners and due dates where known.\n\n'
+    + '6. UPCOMING CRITICAL PATH MILESTONES (next 30 days): Key upcoming tasks from the Gantt that are on the critical path for facade panel installation. Include task names and dates. Flag any items at risk of delay.\n\n'
+    + '7. Professional closing signed by ' + (senderName || 'Elemex Project Manager') + '\n\n'
+    + 'Remember: the discussion points from the transcript are the heart of this email. The schedule data supports and contextualizes those points.';
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',

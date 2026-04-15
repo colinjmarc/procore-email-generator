@@ -33,7 +33,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 .generate-btn:disabled { background: #ccc; cursor: not-allowed; }
 .error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
 .output-area { display: none; margin-top: 20px; }
-.output-area textarea { min-height: 400px; font-size: 14px; line-height: 1.6; }
+.output-area textarea { min-height: 500px; font-size: 14px; line-height: 1.6; }
 .copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
 .copy-btn:hover { background: #1e4d1e; }
 .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
@@ -234,29 +234,44 @@ function generateEmail() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
-  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels to installing contractors on construction projects. Elemex does NOT do any installation — our scope is panel design, fabrication, and delivery only.\n\n'
-    + 'IMPORTANT RULES:\n'
-    + '- The email body must be driven entirely by the key discussion points from the meeting transcript below\n'
-    + '- Every point in the email must reflect Elemex\'s perspective as the facade panel designer and supplier\n'
-    + '- Use the Gantt chart schedule data to add specific task names, dates, and critical path context to support the discussion points\n'
-    + '- Do NOT mention budgets, costs, payments, or any financial information\n'
-    + '- Do NOT write from the installer\'s perspective\n\n'
+  var prompt = 'You are a project coordinator at Elemex. Elemex designs and supplies architectural facade panels to installing contractors. Elemex does NOT install — scope is design, fabrication, and delivery only.\n\n'
+    + 'Generate a post-meeting status email using the exact template structure below. Be direct and factual. No pleasantries, no filler sentences, no fluff. Every point must be grounded in the actual data provided.\n\n'
+    + 'RULES:\n'
+    + '- No budgets, costs, or financials of any kind\n'
+    + '- No filler phrases like "I hope this finds you well" or "Please do not hesitate"\n'
+    + '- Write from Elemex\'s perspective as panel designer and supplier only\n'
+    + '- Critical path items come FIRST and must come directly from the Gantt chart\n'
+    + '- Cross-reference Gantt tasks against the transcript: if a critical path item was discussed, note it; if it was not discussed, flag it\n'
+    + '- Meeting discussion points form the rest of the email body — keep each point concise and direct\n\n'
     + 'PROJECT: ' + (projectName || 'Construction Project') + '\n'
     + 'AUDIENCE: ' + audience + '\n'
     + 'TONE: ' + tone + '\n'
     + 'SENDER: ' + (senderName || 'Elemex Project Manager') + '\n'
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
-    + '\nGANTT CHART / SCHEDULE DATA (use for dates, task names, and critical path context):\n' + (ganttText || 'No Gantt chart provided')
-    + '\n\nMEETING TRANSCRIPT (this is the PRIMARY source — the email body must be based on these discussion points):\n' + (transcript || 'No transcript provided')
-    + '\n\nWrite a complete professional email with these sections:\n\n'
-    + '1. SUBJECT: (one concise line reflecting the main topic from the meeting)\n\n'
-    + '2. Greeting appropriate for ' + audience + '\n\n'
-    + '3. OPENING SUMMARY: 2-3 sentences summarizing the purpose of this email based on what was discussed in the meeting, from Elemex\'s perspective as panel designer and supplier.\n\n'
-    + '4. KEY DISCUSSION POINTS: This is the main body of the email. For each significant topic raised in the meeting transcript, write a clear paragraph from Elemex\'s point of view. Where relevant, reference specific task names and dates from the Gantt schedule to show how each discussion point connects to the critical path.\n\n'
-    + '5. ACTION ITEMS: Bullet list of specific actions Elemex is committing to or requesting, with owners and due dates where known.\n\n'
-    + '6. UPCOMING CRITICAL PATH MILESTONES (next 30 days): Key upcoming tasks from the Gantt that are on the critical path for facade panel installation. Include task names and dates. Flag any items at risk of delay.\n\n'
-    + '7. Professional closing signed by ' + (senderName || 'Elemex Project Manager') + '\n\n'
-    + 'Remember: the discussion points from the transcript are the heart of this email. The schedule data supports and contextualizes those points.';
+    + '\nGANTT CHART / SCHEDULE DATA:\n' + (ganttText || 'No Gantt chart provided')
+    + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
+    + '\n\nUSE THIS EXACT EMAIL TEMPLATE:\n\n'
+    + 'SUBJECT: [Project name] – Post-Meeting Summary [date]\n\n'
+    + '[Greeting],\n\n'
+    + 'Please find below a summary of today\'s meeting and current schedule status.\n\n'
+    + '---\n'
+    + 'CRITICAL PATH – UPCOMING TASKS\n'
+    + '---\n'
+    + 'List each upcoming critical path task taken directly from the Gantt chart as a bullet point in this format:\n'
+    + '• [Task Name] — Due: [Date] — Status: [On Track / At Risk / Delayed] — Note: [one line if discussed in meeting or flagged as risk]\n\n'
+    + '---\n'
+    + 'MEETING DISCUSSION POINTS\n'
+    + '---\n'
+    + 'List each key point from the meeting transcript as a concise bullet. Frame each point from Elemex\'s perspective as panel designer and supplier. One line per point. No paragraph prose.\n'
+    + '• [Point]\n'
+    + '• [Point]\n\n'
+    + '---\n'
+    + 'ACTION ITEMS\n'
+    + '---\n'
+    + '• [Action] — Owner: [Name or Elemex/Contractor] — Due: [Date]\n\n'
+    + '---\n\n'
+    + 'Regards,\n'
+    + (senderName || 'Elemex Project Manager');
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -267,7 +282,7 @@ function generateEmail() {
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
+      temperature: 0.4,
       max_tokens: 2000
     })
   })

@@ -33,7 +33,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 .generate-btn:disabled { background: #ccc; cursor: not-allowed; }
 .error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
 .output-area { display: none; margin-top: 20px; }
-.email-preview { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; min-height: 400px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.6; }
+.email-preview { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; min-height: 400px; }
 .copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; margin-right: 8px; }
 .copy-btn:hover { background: #1e4d1e; }
 .copy-btn.secondary { background: #555; }
@@ -249,42 +249,32 @@ function generateEmail() {
 
   var prompt = 'You are a project coordinator at Elemex (designs and supplies architectural facade panels — does NOT install). Write from Elemex\'s perspective only.\n\n'
     + 'TODAY: ' + todayStr + '\n\n'
-    + 'OUTPUT FORMAT: Return ONLY a JSON object with this structure (no markdown, no commentary):\n'
+    + 'OUTPUT FORMAT: Return ONLY a JSON object:\n'
     + '{\n'
     + '  "subject": "...",\n'
     + '  "opening": "Thank you for your time today. ...",\n'
-    + '  "critical_path_items": [\n'
-    + '    { "title": "...", "owner": "...", "related_gantt_task": "...", "due_date": "...", "impact": "..." }\n'
-    + '  ],\n'
-    + '  "additional_action_items": [\n'
-    + '    { "action": "...", "owner": "...", "due": "..." }\n'
-    + '  ],\n'
+    + '  "critical_path_items": [{ "title": "...", "owner": "...", "related_gantt_task": "...", "due_date": "...", "impact": "..." }],\n'
+    + '  "additional_action_items": [{ "action": "...", "owner": "...", "due": "..." }],\n'
     + '  "next_steps": ["Next Meeting: ' + nextMeeting + '", "..."],\n'
     + '  "closing": "..."\n'
     + '}\n\n'
     + 'HOW TO BUILD CRITICAL PATH ITEMS:\n'
-    + '1. Identify important topics raised in the transcript (panel design, fabrication, delivery, approvals, submittals, RFIs, coordination, schedule-sensitive items)\n'
+    + '1. Identify important topics from the transcript (panel design, fabrication, delivery, approvals, submittals, RFIs, coordination, schedule-sensitive items)\n'
     + '2. For each, cross-reference the Gantt to find the related task and due date\n'
     + '3. Transcript drives WHICH items are included; Gantt provides dates and schedule impact\n'
-    + '4. Include every important transcript item — do not limit the number\n\n'
-    + 'RULES:\n'
-    + '- No budgets, costs, or financials\n'
-    + '- Additional action items = smaller transcript items not schedule-critical\n'
-    + '- Return valid JSON only\n\n'
+    + '4. Include every important transcript item\n\n'
+    + 'RULES: No budgets/costs. Additional action items = smaller non-critical items. Return valid JSON only.\n\n'
     + 'PROJECT: ' + projectName + '\n'
     + 'MEETING DATE: ' + meetingDate + '\n'
     + 'SENDER: ' + senderName + '\n'
     + 'REVIEW DEADLINE: ' + reviewDeadline + '\n'
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
-    + '\nGANTT DATA:\n' + (ganttText || 'None')
-    + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'None');
+    + '\nGANTT:\n' + (ganttText || 'None')
+    + '\n\nTRANSCRIPT:\n' + (transcript || 'None');
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + apiKey,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
@@ -318,51 +308,60 @@ function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, se
   var actionItems = json.additional_action_items || [];
   var nextSteps = json.next_steps || [];
 
+  var FONT = 'font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6; color:#333333;';
+  var FONT_BOLD = 'font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6; color:#333333; font-weight:bold;';
   var RED = '#c0392b';
-  var GREY = '#555';
-  var redDivider = '<div style="border-top:2px solid ' + RED + ';margin:10px 0;"></div>';
-  var greyDivider = '<div style="border-top:1px solid ' + GREY + ';margin:10px 0;"></div>';
+  var GREY = '#555555';
 
-  var html = '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;color:#333;">';
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;"><strong>Subject:</strong> ' + escapeHtml(subject) + '</p>';
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">Hi ' + escapeHtml(clientName) + ',</p>';
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">' + escapeHtml(json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '</p>';
+  // Red divider using a table (email-client safe)
+  function redLine() {
+    return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; width:100%; margin:8px 0;"><tr><td style="height:2px; line-height:2px; font-size:2px; background-color:' + RED + ';">&nbsp;</td></tr></table>';
+  }
+  // Grey divider
+  function greyLine() {
+    return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; width:100%; margin:8px 0;"><tr><td style="height:1px; line-height:1px; font-size:1px; background-color:' + GREY + ';">&nbsp;</td></tr></table>';
+  }
 
-  html += redDivider;
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;color:' + RED + ';font-weight:bold;font-size:16px;margin:0;">&#128308; CRITICAL PATH ITEMS</p>';
-  html += redDivider;
+  var html = '<div style="' + FONT + ' max-width:720px;">';
+  html += '<p style="' + FONT + ' margin:0 0 10px 0;"><span style="font-weight:bold;">Subject:</span> ' + escapeHtml(subject) + '</p>';
+  html += '<p style="' + FONT + ' margin:0 0 10px 0;">Hi ' + escapeHtml(clientName) + ',</p>';
+  html += '<p style="' + FONT + ' margin:0 0 10px 0;">' + escapeHtml(json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '</p>';
 
-  html += '<ol style="font-family:Segoe UI,Arial,sans-serif;padding-left:20px;">';
+  html += redLine();
+  html += '<p style="font-family:Segoe UI, Arial, sans-serif; font-size:16px; line-height:1.4; color:' + RED + '; font-weight:bold; margin:4px 0;">&#128308; CRITICAL PATH ITEMS</p>';
+  html += redLine();
+
+  html += '<ol style="' + FONT + ' padding-left:24px; margin:10px 0;">';
   criticalItems.forEach(function(item) {
-    html += '<li style="margin-bottom:12px;"><strong>' + escapeHtml(item.title || '') + '</strong>';
-    html += '<ul style="margin-top:4px;">';
-    if (item.owner) html += '<li>Owner: ' + escapeHtml(item.owner) + '</li>';
-    if (item.related_gantt_task) html += '<li>Related Gantt Task: ' + escapeHtml(item.related_gantt_task) + '</li>';
-    if (item.due_date) html += '<li>Due Date: ' + escapeHtml(item.due_date) + '</li>';
-    if (item.impact) html += '<li>Impact if Delayed: ' + escapeHtml(item.impact) + '</li>';
+    html += '<li style="' + FONT + ' margin-bottom:12px;"><span style="font-weight:bold;">' + escapeHtml(item.title || '') + '</span>';
+    html += '<ul style="' + FONT + ' margin:4px 0 0 0; padding-left:20px;">';
+    if (item.owner) html += '<li style="' + FONT + '">Owner: ' + escapeHtml(item.owner) + '</li>';
+    if (item.related_gantt_task) html += '<li style="' + FONT + '">Related Gantt Task: ' + escapeHtml(item.related_gantt_task) + '</li>';
+    if (item.due_date) html += '<li style="' + FONT + '">Due Date: ' + escapeHtml(item.due_date) + '</li>';
+    if (item.impact) html += '<li style="' + FONT + '">Impact if Delayed: ' + escapeHtml(item.impact) + '</li>';
     html += '</ul></li>';
   });
   html += '</ol>';
 
-  html += greyDivider;
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;font-weight:bold;font-size:14px;margin:0;">ADDITIONAL ACTION ITEMS</p>';
-  html += greyDivider;
-  html += '<ul style="font-family:Segoe UI,Arial,sans-serif;">';
+  html += greyLine();
+  html += '<p style="' + FONT_BOLD + ' margin:4px 0;">ADDITIONAL ACTION ITEMS</p>';
+  html += greyLine();
+  html += '<ul style="' + FONT + ' padding-left:24px; margin:10px 0;">';
   actionItems.forEach(function(a) {
-    html += '<li>' + escapeHtml(a.action || '') + ' &ndash; Owner: ' + escapeHtml(a.owner || 'TBD') + ' | Due: ' + escapeHtml(a.due || 'TBD') + '</li>';
+    html += '<li style="' + FONT + '">' + escapeHtml(a.action || '') + ' &ndash; Owner: ' + escapeHtml(a.owner || 'TBD') + ' | Due: ' + escapeHtml(a.due || 'TBD') + '</li>';
   });
   html += '</ul>';
 
-  html += greyDivider;
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;font-weight:bold;font-size:14px;margin:0;">NEXT STEPS</p>';
-  html += greyDivider;
-  html += '<ul style="font-family:Segoe UI,Arial,sans-serif;">';
-  nextSteps.forEach(function(s) { html += '<li>' + escapeHtml(s) + '</li>'; });
+  html += greyLine();
+  html += '<p style="' + FONT_BOLD + ' margin:4px 0;">NEXT STEPS</p>';
+  html += greyLine();
+  html += '<ul style="' + FONT + ' padding-left:24px; margin:10px 0;">';
+  nextSteps.forEach(function(s) { html += '<li style="' + FONT + '">' + escapeHtml(s) + '</li>'; });
   html += '</ul>';
 
-  html += greyDivider;
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">' + escapeHtml(json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.')) + '</p>';
-  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">Best regards,<br>' + escapeHtml(senderName) + '</p>';
+  html += greyLine();
+  html += '<p style="' + FONT + ' margin:10px 0;">' + escapeHtml(json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.')) + '</p>';
+  html += '<p style="' + FONT + ' margin:10px 0;">Best regards,<br>' + escapeHtml(senderName) + '</p>';
   html += '</div>';
 
   emailHtml = html;
@@ -372,9 +371,7 @@ function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, se
   var text = 'Subject: ' + subject + '\n\n';
   text += 'Hi ' + clientName + ',\n\n';
   text += (json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '\n\n';
-  text += divider + '\n';
-  text += '🔴 CRITICAL PATH ITEMS\n';
-  text += divider + '\n\n';
+  text += divider + '\n🔴 CRITICAL PATH ITEMS\n' + divider + '\n\n';
   criticalItems.forEach(function(item, i) {
     text += (i + 1) + '. ' + (item.title || '') + '\n';
     if (item.owner) text += '   • Owner: ' + item.owner + '\n';

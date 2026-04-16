@@ -14,33 +14,22 @@
     padding: 20px;
     color: #2c3e50;
   }
-  .wrapper {
-    width: 95%;
-    max-width: 1600px;
-    margin: 0 auto;
-  }
-  header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  header h1 {
-    margin: 0 0 6px;
-    color: #c0392b;
-    font-size: 26px;
-  }
-  header p {
-    margin: 0;
-    color: #666;
-    font-size: 14px;
-  }
+  .wrapper { width: 95%; max-width: 1600px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 { margin: 0 0 6px; color: #c0392b; font-size: 26px; }
+  header p { margin: 0; color: #666; font-size: 14px; }
+
   .main-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    align-items: start;
   }
+  .left-col, .right-col { display: flex; flex-direction: column; }
   @media (max-width: 1100px) {
     .main-grid { grid-template-columns: 1fr; }
   }
+
   .card {
     background: #fff;
     border-radius: 10px;
@@ -51,65 +40,64 @@
   .card h2 {
     margin: 0 0 12px;
     font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex; align-items: center; gap: 10px;
   }
   .step-num {
-    background: #e67e22;
-    color: #fff;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: bold;
+    background: #e67e22; color: #fff;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: bold;
   }
-  .hint {
-    font-size: 12px;
-    color: #777;
-    margin: 0 0 10px;
-  }
+  .hint { font-size: 12px; color: #777; margin: 0 0 10px; }
+
   input[type="text"], input[type="date"], input[type="password"], textarea, select {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid #d0d4d8;
-    border-radius: 6px;
-    font-size: 13px;
-    font-family: inherit;
+    width: 100%; padding: 8px 10px;
+    border: 1px solid #d0d4d8; border-radius: 6px;
+    font-size: 13px; font-family: inherit;
   }
   textarea { resize: vertical; }
   label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    margin: 8px 0 4px;
-    color: #34495e;
+    display: block; font-size: 12px; font-weight: 600;
+    margin: 8px 0 4px; color: #34495e;
   }
-  .field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  input[type="file"] {
-    width: 100%;
-    font-size: 13px;
-  }
-  button {
-    background: #e67e22;
-    color: #fff;
-    border: none;
-    padding: 10px 18px;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 6px;
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* Upload drop zones */
+  .drop-zone {
+    border: 2px dashed #d0d4d8;
+    border-radius: 8px;
+    padding: 22px;
+    text-align: center;
     cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: #fafbfc;
+  }
+  .drop-zone:hover { border-color: #e67e22; background: #fff8f1; }
+  .drop-zone .icon { font-size: 28px; margin-bottom: 6px; }
+  .drop-zone .main-text { font-weight: 600; font-size: 14px; color: #2c3e50; }
+  .drop-zone .sub-text { font-size: 12px; color: #888; margin-top: 2px; }
+  .drop-zone input[type="file"] { display: none; }
+  .loaded-banner {
+    background: #eafaf1;
+    border: 1px solid #c8e6d0;
+    color: #27663c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-top: 8px;
+    display: none;
+  }
+  .loaded-banner.show { display: block; }
+
+  button {
+    background: #e67e22; color: #fff; border: none;
+    padding: 10px 18px; font-size: 14px; font-weight: 600;
+    border-radius: 6px; cursor: pointer;
   }
   button.secondary { background: #27ae60; }
   button.ghost { background: #7f8c8d; }
   button:disabled { opacity: 0.6; cursor: not-allowed; }
+
   .preview {
     border: 1px dashed #e67e22;
     background: #fff;
@@ -121,19 +109,8 @@
     font-size: 13px;
     line-height: 1.5;
   }
-  .btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-  }
-  .status {
-    font-size: 12px;
-    color: #555;
-    margin-top: 8px;
-    min-height: 16px;
-  }
-  .file-info { font-size: 12px; color: #27ae60; margin-top: 4px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .status { font-size: 12px; color: #555; margin-top: 8px; min-height: 16px; }
 </style>
 </head>
 <body>
@@ -144,33 +121,50 @@
   </header>
 
   <div class="main-grid">
-    <!-- LEFT COLUMN: inputs -->
-    <div>
-      <div class="card">
-        <h2><span class="step-num">1</span> Gantt Chart (PDF)</h2>
-        <p class="hint">Export your Procore schedule as a PDF and upload it here.</p>
-        <input type="file" id="ganttFile" accept="application/pdf">
-        <div id="ganttInfo" class="file-info"></div>
-      </div>
+
+    <!-- ========== LEFT COLUMN ========== -->
+    <div class="left-col">
 
       <div class="card">
-        <h2><span class="step-num">2</span> Meeting Transcript</h2>
-        <p class="hint">Accepted: .txt, .pdf, .doc, .docx</p>
-        <input type="file" id="transcriptFile" accept=".txt,.pdf,.doc,.docx">
-        <div id="transcriptInfo" class="file-info"></div>
-      </div>
-
-      <div class="card">
-        <h2><span class="step-num">3</span> Groq API Key</h2>
+        <h2><span class="step-num">1</span> Groq API Key</h2>
         <p class="hint">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — no credit card required.</p>
         <input type="password" id="apiKey" placeholder="gsk_...">
       </div>
-    </div>
 
-    <!-- RIGHT COLUMN: preferences + generate/preview -->
-    <div>
       <div class="card">
-        <h2><span class="step-num">4</span> Email Preferences</h2>
+        <h2><span class="step-num">2</span> Upload Files</h2>
+
+        <label>Gantt Chart PDF (exported from Procore)</label>
+        <label class="drop-zone" for="ganttFile">
+          <div class="icon">📊</div>
+          <div class="main-text">Click to upload Gantt chart PDF</div>
+          <div class="sub-text">Supports .pdf</div>
+          <input type="file" id="ganttFile" accept="application/pdf">
+        </label>
+        <div id="ganttInfo" class="loaded-banner"></div>
+
+        <label style="margin-top:14px;">Meeting Transcript</label>
+        <label class="drop-zone" for="transcriptFile">
+          <div class="icon">🎙️</div>
+          <div class="main-text">Click to upload transcript</div>
+          <div class="sub-text">Supports .txt, .pdf, .doc, .docx</div>
+          <input type="file" id="transcriptFile" accept=".txt,.pdf,.doc,.docx">
+        </label>
+        <div id="transcriptInfo" class="loaded-banner"></div>
+
+        <label style="margin-top:14px;">Or paste transcript text directly:</label>
+        <textarea id="transcriptPaste" rows="6" placeholder="Paste transcript text here..."></textarea>
+      </div>
+
+    </div>
+    <!-- ========== END LEFT COLUMN ========== -->
+
+
+    <!-- ========== RIGHT COLUMN ========== -->
+    <div class="right-col">
+
+      <div class="card">
+        <h2><span class="step-num">3</span> Email Preferences</h2>
         <div class="field-row">
           <div>
             <label>Client Name</label>
@@ -202,7 +196,7 @@
       </div>
 
       <div class="card">
-        <h2><span class="step-num">5</span> Generate Email</h2>
+        <h2><span class="step-num">4</span> Generate Email</h2>
         <p class="hint">AI reads your Gantt PDF and transcript to write the email automatically.</p>
         <button id="generateBtn">✨ Generate Email with AI</button>
         <div id="status" class="status"></div>
@@ -213,7 +207,10 @@
           <button class="ghost" id="copyTextBtn">📄 Copy Plain Text</button>
         </div>
       </div>
+
     </div>
+    <!-- ========== END RIGHT COLUMN ========== -->
+
   </div>
 </div>
 
@@ -241,29 +238,38 @@ async function readFileAny(file) {
   return await file.text();
 }
 
+function showBanner(id, msg, ok = true) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add("show");
+  el.style.background = ok ? "#eafaf1" : "#fdecea";
+  el.style.color = ok ? "#27663c" : "#a9312a";
+  el.style.borderColor = ok ? "#c8e6d0" : "#f5c2bf";
+}
+
 document.getElementById("ganttFile").addEventListener("change", async e => {
   const f = e.target.files[0]; if (!f) return;
-  document.getElementById("ganttInfo").textContent = "Reading " + f.name + "...";
+  showBanner("ganttInfo", "Reading " + f.name + "...");
   try {
     ganttText = await readPdf(f);
-    document.getElementById("ganttInfo").textContent = "✓ Loaded " + f.name + " (" + ganttText.length + " chars)";
+    showBanner("ganttInfo", "Loaded: " + f.name + " (" + Math.round(f.size/1024) + "KB)");
   } catch (err) {
-    document.getElementById("ganttInfo").textContent = "Error: " + err.message;
+    showBanner("ganttInfo", "Error: " + err.message, false);
   }
 });
 
 document.getElementById("transcriptFile").addEventListener("change", async e => {
   const f = e.target.files[0]; if (!f) return;
-  document.getElementById("transcriptInfo").textContent = "Reading " + f.name + "...";
+  showBanner("transcriptInfo", "Reading " + f.name + "...");
   try {
     transcriptText = await readFileAny(f);
-    document.getElementById("transcriptInfo").textContent = "✓ Loaded " + f.name + " (" + transcriptText.length + " chars)";
+    showBanner("transcriptInfo", "Loaded: " + f.name + " (" + Math.round(f.size/1024) + "KB)");
   } catch (err) {
-    document.getElementById("transcriptInfo").textContent = "Error: " + err.message;
+    showBanner("transcriptInfo", "Error: " + err.message, false);
   }
 });
 
-function buildPrompt(prefs) {
+function buildPrompt(prefs, transcript) {
   return `You are drafting a post-meeting project email for Elemex, a facade panel DESIGNER and SUPPLIER. Elemex designs and manufactures panels and delivers them to the installer. Elemex DOES NOT install. Write from Elemex's point of view.
 
 STRICT RULES:
@@ -299,11 +305,11 @@ GANTT TEXT:
 ${ganttText.slice(0, 12000)}
 
 TRANSCRIPT:
-${transcriptText.slice(0, 12000)}`;
+${transcript.slice(0, 12000)}`;
 }
 
 function renderEmail(data, prefs) {
-  const crit = (data.critical_items || []).map((it, i) => `
+  const crit = (data.critical_items || []).map((it) => `
     <li style="margin-bottom:10px;">
       <strong>${it.title || ""}</strong>
       <ul style="margin:4px 0 0 0; padding-left:20px;">
@@ -362,9 +368,12 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
   const apiKey = document.getElementById("apiKey").value.trim();
   const status = document.getElementById("status");
 
+  const pasted = document.getElementById("transcriptPaste").value.trim();
+  const effectiveTranscript = pasted || transcriptText;
+
   if (!apiKey) { status.textContent = "Enter your Groq API key."; return; }
   if (!ganttText) { status.textContent = "Upload a Gantt PDF."; return; }
-  if (!transcriptText) { status.textContent = "Upload a meeting transcript."; return; }
+  if (!effectiveTranscript) { status.textContent = "Upload or paste a transcript."; return; }
 
   status.textContent = "Contacting Groq...";
   try {
@@ -377,7 +386,7 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
         temperature: 0.3,
         messages: [
           { role: "system", content: "Return only valid JSON matching the schema in the user message." },
-          { role: "user", content: buildPrompt(prefs) }
+          { role: "user", content: buildPrompt(prefs, effectiveTranscript) }
         ]
       })
     });
@@ -388,8 +397,7 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
     const json = await res.json();
     const content = json.choices?.[0]?.message?.content || "{}";
     const data = JSON.parse(content);
-    const html = renderEmail(data, prefs);
-    document.getElementById("preview").innerHTML = html;
+    document.getElementById("preview").innerHTML = renderEmail(data, prefs);
     status.textContent = "✓ Email generated.";
   } catch (err) {
     status.textContent = "Error: " + err.message;

@@ -3,450 +3,419 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Procore Email Generator</title>
+<title>Elemex Project Email Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
-.container { max-width: 1600px; width: 95%; margin: 0 auto; padding: 20px; }
-header { background: #e07b00; color: white; padding: 20px 30px; margin-bottom: 24px; border-radius: 8px; }
-header h1 { font-size: 24px; }
-header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
-
-.main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
-.column { display: flex; flex-direction: column; gap: 20px; }
-@media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
-
-.card { background: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.step-num { background: #e07b00; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; flex-shrink: 0; }
-.step-header h2 { font-size: 18px; color: #333; }
-label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; margin-top: 14px; }
-input[type="text"], input[type="password"], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
-input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00; }
-.api-key-wrap { position: relative; }
-.api-key-wrap input { padding-right: 60px; }
-.show-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #e07b00; cursor: pointer; font-size: 13px; font-weight: 600; }
-.upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 8px; }
-.upload-area:hover { border-color: #e07b00; background: #fff8f0; }
-.upload-area .icon { font-size: 32px; margin-bottom: 6px; }
-.upload-area p { font-weight: 600; color: #444; }
-.upload-area small { color: #888; font-size: 12px; }
-.file-info { background: #f0f9f0; border: 1px solid #b8e0b8; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #2d6a2d; display: none; margin-bottom: 8px; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
-.generate-btn { background: #e07b00; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; width: 100%; }
-.generate-btn:hover { background: #c96a00; }
-.generate-btn:disabled { background: #ccc; cursor: not-allowed; }
-.error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
-.output-area { display: none; margin-top: 16px; }
-.email-preview { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; min-height: 500px; max-height: 70vh; overflow-y: auto; }
-.button-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; min-width: 180px; }
-.copy-btn:hover { background: #1e4d1e; }
-.copy-btn.secondary { background: #555; }
-.copy-btn.secondary:hover { background: #333; }
-.spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.groq-link { font-size: 12px; color: #888; margin-top: 6px; }
-.groq-link a { color: #e07b00; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 20px;
+    color: #2c3e50;
+  }
+  .wrapper {
+    width: 95%;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    margin: 0 0 6px;
+    color: #c0392b;
+    font-size: 26px;
+  }
+  header p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+  }
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 1100px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-num {
+    background: #e67e22;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .hint {
+    font-size: 12px;
+    color: #777;
+    margin: 0 0 10px;
+  }
+  input[type="text"], input[type="date"], input[type="password"], textarea, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d0d4d8;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 8px 0 4px;
+    color: #34495e;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  input[type="file"] {
+    width: 100%;
+    font-size: 13px;
+  }
+  button {
+    background: #e67e22;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  button.secondary { background: #27ae60; }
+  button.ghost { background: #7f8c8d; }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .preview {
+    border: 1px dashed #e67e22;
+    background: #fff;
+    padding: 14px;
+    border-radius: 6px;
+    min-height: 300px;
+    max-height: 600px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .status {
+    font-size: 12px;
+    color: #555;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+  .file-info { font-size: 12px; color: #27ae60; margin-top: 4px; }
 </style>
 </head>
 <body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-</script>
-<div class="container">
-
+<div class="wrapper">
   <header>
-    <h1>Procore Project Email Generator</h1>
-    <p>Upload your Gantt chart PDF and meeting transcript to auto-generate a project status email</p>
+    <h1>Elemex Project Email Generator</h1>
+    <p>Upload your Gantt PDF and meeting transcript — AI drafts your post-meeting email.</p>
   </header>
 
   <div class="main-grid">
-
-    <div class="column">
-
+    <!-- LEFT COLUMN: inputs -->
+    <div>
       <div class="card">
-        <div class="step-header"><div class="step-num">1</div><h2>Enter Your Groq API Key</h2></div>
-        <label for="apiKey">Groq API Key</label>
-        <div class="api-key-wrap">
-          <input type="password" id="apiKey" placeholder="gsk_...">
-          <button class="show-btn" id="showBtn" type="button">Show</button>
-        </div>
-        <p class="groq-link">Free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — no credit card required</p>
+        <h2><span class="step-num">1</span> Gantt Chart (PDF)</h2>
+        <p class="hint">Export your Procore schedule as a PDF and upload it here.</p>
+        <input type="file" id="ganttFile" accept="application/pdf">
+        <div id="ganttInfo" class="file-info"></div>
       </div>
 
       <div class="card">
-        <div class="step-header"><div class="step-num">2</div><h2>Upload Files</h2></div>
-        <label>Gantt Chart PDF (exported from Procore)</label>
-        <div class="upload-area" id="ganttDrop">
-          <div class="icon">&#128202;</div>
-          <p>Click to upload Gantt chart PDF</p>
-          <small>Supports .pdf</small>
-        </div>
-        <input type="file" id="ganttFile" accept=".pdf" style="display:none">
-        <div class="file-info" id="ganttInfo"></div>
-        <label>Meeting Transcript</label>
-        <div class="upload-area" id="transcriptDrop">
-          <div class="icon">&#127897;</div>
-          <p>Click to upload transcript</p>
-          <small>Supports .txt, .pdf, .doc, .docx</small>
-        </div>
-        <input type="file" id="transcriptFile" accept=".txt,.pdf,.doc,.docx" style="display:none">
-        <div class="file-info" id="transcriptInfo"></div>
-        <label>Or paste transcript text directly:</label>
-        <textarea id="transcriptText" rows="5" placeholder="Paste meeting transcript here..."></textarea>
+        <h2><span class="step-num">2</span> Meeting Transcript</h2>
+        <p class="hint">Accepted: .txt, .pdf, .doc, .docx</p>
+        <input type="file" id="transcriptFile" accept=".txt,.pdf,.doc,.docx">
+        <div id="transcriptInfo" class="file-info"></div>
       </div>
 
       <div class="card">
-        <div class="step-header"><div class="step-num">3</div><h2>Email Preferences</h2></div>
-        <div class="two-col">
+        <h2><span class="step-num">3</span> Groq API Key</h2>
+        <p class="hint">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — no credit card required.</p>
+        <input type="password" id="apiKey" placeholder="gsk_...">
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: preferences + generate/preview -->
+    <div>
+      <div class="card">
+        <h2><span class="step-num">4</span> Email Preferences</h2>
+        <div class="field-row">
           <div>
-            <label for="clientName">Client Name</label>
-            <input type="text" id="clientName" placeholder="e.g. John Smith">
+            <label>Client Name</label>
+            <input type="text" id="clientName" placeholder="e.g. Scott">
           </div>
           <div>
-            <label for="projectName">Project Name</label>
-            <input type="text" id="projectName" placeholder="e.g. New Southwest Community Centre">
-          </div>
-        </div>
-        <div class="two-col">
-          <div>
-            <label for="meetingDate">Meeting Date</label>
-            <input type="text" id="meetingDate" placeholder="e.g. April 15, 2026">
+            <label>Project Name</label>
+            <input type="text" id="projectName" placeholder="e.g. Cayucos">
           </div>
           <div>
-            <label for="nextMeeting">Next Meeting</label>
-            <input type="text" id="nextMeeting" placeholder="e.g. April 22, 2026 at 10:00 AM">
-          </div>
-        </div>
-        <div class="two-col">
-          <div>
-            <label for="senderName">Sender Name</label>
-            <input type="text" id="senderName" placeholder="e.g. John Smith, Elemex">
+            <label>Meeting Date</label>
+            <input type="date" id="meetingDate">
           </div>
           <div>
-            <label for="reviewDeadline">Review Deadline</label>
+            <label>Next Meeting</label>
+            <input type="text" id="nextMeeting" placeholder="e.g. April 23, 2026 @ 10am">
+          </div>
+          <div>
+            <label>Sender Name</label>
+            <input type="text" id="senderName" placeholder="Your name">
+          </div>
+          <div>
+            <label>Review Deadline</label>
             <input type="text" id="reviewDeadline" placeholder="e.g. April 18, 2026">
           </div>
         </div>
-        <label for="extraInstructions">Additional Instructions (optional)</label>
-        <input type="text" id="extraInstructions" placeholder="e.g. Panels for floors 3-5 shipping next week, anchor RFI pending response">
+        <label>Additional Instructions (optional)</label>
+        <textarea id="extraInstructions" rows="2" placeholder="Anything specific you want emphasized..."></textarea>
       </div>
-
-    </div>
-
-    <div class="column">
 
       <div class="card">
-        <div class="step-header"><div class="step-num">4</div><h2>Generate Email</h2></div>
-        <p style="font-size:13px;color:#666;margin-bottom:12px;">AI reads your Gantt PDF and transcript to write the email automatically.</p>
-        <button class="generate-btn" id="generateBtn" type="button">&#10024; Generate Email with AI</button>
-        <div class="error-box" id="errorBox"></div>
-        <div class="output-area" id="outputArea">
-          <label>Generated Email Preview</label>
-          <div class="email-preview" id="emailPreview"></div>
-          <div class="button-row">
-            <button class="copy-btn" id="copyHtmlBtn" type="button">&#128203; Copy Formatted (for Outlook/Gmail)</button>
-            <button class="copy-btn secondary" id="copyTextBtn" type="button">Copy as Plain Text</button>
-          </div>
+        <h2><span class="step-num">5</span> Generate Email</h2>
+        <p class="hint">AI reads your Gantt PDF and transcript to write the email automatically.</p>
+        <button id="generateBtn">✨ Generate Email with AI</button>
+        <div id="status" class="status"></div>
+        <label style="margin-top:14px;">Email Preview</label>
+        <div id="preview" class="preview"><em style="color:#999;">Your generated email will appear here.</em></div>
+        <div class="btn-row">
+          <button class="secondary" id="copyHtmlBtn">📋 Copy Formatted</button>
+          <button class="ghost" id="copyTextBtn">📄 Copy Plain Text</button>
         </div>
       </div>
-
     </div>
-
   </div>
-
 </div>
-<script>
-var ganttText = '';
-var transcriptContent = '';
-var emailHtml = '';
-var emailText = '';
 
-document.getElementById('showBtn').addEventListener('click', function() {
-  var inp = document.getElementById('apiKey');
-  if (inp.type === 'password') { inp.type = 'text'; this.textContent = 'Hide'; }
-  else { inp.type = 'password'; this.textContent = 'Show'; }
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+let ganttText = "";
+let transcriptText = "";
+
+async function readPdf(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it => it.str).join(" ") + "\n";
+  }
+  return text;
+}
+
+async function readFileAny(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".pdf")) return await readPdf(file);
+  return await file.text();
+}
+
+document.getElementById("ganttFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  document.getElementById("ganttInfo").textContent = "Reading " + f.name + "...";
+  try {
+    ganttText = await readPdf(f);
+    document.getElementById("ganttInfo").textContent = "✓ Loaded " + f.name + " (" + ganttText.length + " chars)";
+  } catch (err) {
+    document.getElementById("ganttInfo").textContent = "Error: " + err.message;
+  }
 });
 
-document.getElementById('ganttDrop').addEventListener('click', function() { document.getElementById('ganttFile').click(); });
-document.getElementById('transcriptDrop').addEventListener('click', function() { document.getElementById('transcriptFile').click(); });
-document.getElementById('ganttFile').addEventListener('change', function() { if (this.files[0]) handleGantt(this.files[0]); });
-document.getElementById('transcriptFile').addEventListener('change', function() { if (this.files[0]) handleTranscript(this.files[0]); });
-document.getElementById('generateBtn').addEventListener('click', generateEmail);
-document.getElementById('copyHtmlBtn').addEventListener('click', copyHtml);
-document.getElementById('copyTextBtn').addEventListener('click', copyText);
-
-function extractPdfText(file) {
-  return new Promise(function(resolve) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var typedArray = new Uint8Array(e.target.result);
-      pdfjsLib.getDocument({ data: typedArray }).promise.then(function(pdf) {
-        var allText = [];
-        var chain = Promise.resolve();
-        for (var i = 1; i <= pdf.numPages; i++) {
-          (function(pageNum) {
-            chain = chain.then(function() {
-              return pdf.getPage(pageNum).then(function(page) {
-                return page.getTextContent().then(function(content) {
-                  var pageText = content.items.map(function(item) { return item.str; }).join(' ');
-                  allText.push(pageText);
-                });
-              });
-            });
-          })(i);
-        }
-        chain.then(function() {
-          resolve(allText.join('\n') || 'No text could be extracted from PDF');
-        });
-      }).catch(function() {
-        resolve('Could not parse PDF - please ensure it is a text-based PDF');
-      });
-    };
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-function handleGantt(file) {
-  var info = document.getElementById('ganttInfo');
-  info.style.display = 'block';
-  info.textContent = 'Reading ' + file.name + '...';
-  extractPdfText(file).then(function(t) {
-    ganttText = t;
-    info.textContent = 'Loaded: ' + file.name + ' (' + Math.round(file.size / 1024) + 'KB)';
-  });
-}
-
-function handleTranscript(file) {
-  var info = document.getElementById('transcriptInfo');
-  info.style.display = 'block';
-  info.textContent = 'Reading ' + file.name + '...';
-  if (file.name.toLowerCase().endsWith('.pdf')) {
-    extractPdfText(file).then(function(t) {
-      transcriptContent = t;
-      document.getElementById('transcriptText').value = t;
-      info.textContent = 'Loaded: ' + file.name;
-    });
-  } else {
-    var r = new FileReader();
-    r.onload = function(e) {
-      transcriptContent = e.target.result;
-      document.getElementById('transcriptText').value = transcriptContent;
-      info.textContent = 'Loaded: ' + file.name;
-    };
-    r.readAsText(file);
-  }
-}
-
-function generateEmail() {
-  var apiKey = document.getElementById('apiKey').value.trim();
-  var clientName = document.getElementById('clientName').value.trim() || 'Team';
-  var projectName = document.getElementById('projectName').value.trim() || 'Construction Project';
-  var meetingDate = document.getElementById('meetingDate').value.trim() || 'today';
-  var nextMeeting = document.getElementById('nextMeeting').value.trim() || 'TBD';
-  var senderName = document.getElementById('senderName').value.trim() || 'Elemex Project Manager';
-  var reviewDeadline = document.getElementById('reviewDeadline').value.trim() || 'TBD';
-  var extra = document.getElementById('extraInstructions').value.trim();
-  var transcript = document.getElementById('transcriptText').value.trim();
-  var errorBox = document.getElementById('errorBox');
-  var outputArea = document.getElementById('outputArea');
-  var btn = document.getElementById('generateBtn');
-
-  errorBox.style.display = 'none';
-  outputArea.style.display = 'none';
-
-  if (!apiKey) { showError('Please enter your Groq API key.'); return; }
-  if (!ganttText && !transcript) { showError('Please upload a Gantt PDF and/or provide a meeting transcript.'); return; }
-
-  var today = new Date();
-  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var todayStr = monthNames[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Generating...';
-
-  var prompt = 'You are a project coordinator at Elemex (designs and supplies architectural facade panels — does NOT install). Write from Elemex\'s perspective only.\n\n'
-    + 'TODAY: ' + todayStr + '\n\n'
-    + 'OUTPUT FORMAT: Return ONLY a JSON object:\n'
-    + '{\n'
-    + '  "subject": "...",\n'
-    + '  "opening": "Thank you for your time today. ...",\n'
-    + '  "critical_path_items": [{ "title": "...", "owner": "...", "related_gantt_task": "...", "due_date": "...", "impact": "..." }],\n'
-    + '  "additional_action_items": [{ "action": "...", "owner": "...", "due": "..." }],\n'
-    + '  "next_steps": ["Next Meeting: ' + nextMeeting + '", "..."],\n'
-    + '  "closing": "..."\n'
-    + '}\n\n'
-    + 'HOW TO BUILD CRITICAL PATH ITEMS:\n'
-    + '1. Identify important topics from the transcript (panel design, fabrication, delivery, approvals, submittals, RFIs, coordination, schedule-sensitive items)\n'
-    + '2. For each, cross-reference the Gantt to find the related task and due date\n'
-    + '3. Transcript drives WHICH items are included; Gantt provides dates and schedule impact\n'
-    + '4. Include every important transcript item\n\n'
-    + 'RULES: No budgets/costs. Additional action items = smaller non-critical items. Return valid JSON only.\n\n'
-    + 'PROJECT: ' + projectName + '\n'
-    + 'MEETING DATE: ' + meetingDate + '\n'
-    + 'SENDER: ' + senderName + '\n'
-    + 'REVIEW DEADLINE: ' + reviewDeadline + '\n'
-    + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
-    + '\nGANTT:\n' + (ganttText || 'None')
-    + '\n\nTRANSCRIPT:\n' + (transcript || 'None');
-
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 2500,
-      response_format: { type: 'json_object' }
-    })
-  })
-  .then(function(r) {
-    if (!r.ok) return r.json().then(function(e) { throw new Error(e.error && e.error.message ? e.error.message : 'API error ' + r.status); });
-    return r.json();
-  })
-  .then(function(d) {
-    var json = JSON.parse(d.choices[0].message.content);
-    renderEmail(json, clientName, projectName, meetingDate, nextMeeting, senderName, reviewDeadline);
-    outputArea.style.display = 'block';
-  })
-  .catch(function(e) { showError(e.message); })
-  .finally(function() { btn.disabled = false; btn.innerHTML = '&#10024; Generate Email with AI'; });
-}
-
-function escapeHtml(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, senderName, reviewDeadline) {
-  var subject = json.subject || (projectName + ' – Post-Meeting Summary ' + meetingDate);
-  var criticalItems = json.critical_path_items || [];
-  var actionItems = json.additional_action_items || [];
-  var nextSteps = json.next_steps || [];
-
-  var FONT = 'font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6; color:#333333;';
-  var FONT_BOLD = 'font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6; color:#333333; font-weight:bold;';
-  var RED = '#c0392b';
-  var GREY = '#999999';
-
-  var redHr = '<hr style="border:none; border-top:2px solid ' + RED + '; height:0; margin:10px 0; padding:0; background:none;">';
-  var greyHr = '<hr style="border:none; border-top:1px solid ' + GREY + '; height:0; margin:10px 0; padding:0; background:none;">';
-
-  var html = '<div style="' + FONT + ' max-width:720px;">';
-  html += '<p style="' + FONT + ' margin:0 0 10px 0;"><span style="font-weight:bold;">Subject:</span> ' + escapeHtml(subject) + '</p>';
-  html += '<p style="' + FONT + ' margin:0 0 10px 0;">Hi ' + escapeHtml(clientName) + ',</p>';
-  html += '<p style="' + FONT + ' margin:0 0 10px 0;">' + escapeHtml(json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '</p>';
-  html += redHr;
-  html += '<p style="font-family:Segoe UI, Arial, sans-serif; font-size:16px; line-height:1.4; color:' + RED + '; font-weight:bold; margin:4px 0;">&#128308; CRITICAL PATH ITEMS</p>';
-  html += redHr;
-  html += '<ol style="' + FONT + ' padding-left:24px; margin:10px 0;">';
-  criticalItems.forEach(function(item) {
-    html += '<li style="' + FONT + ' margin-bottom:12px;"><span style="font-weight:bold;">' + escapeHtml(item.title || '') + '</span>';
-    html += '<ul style="' + FONT + ' margin:4px 0 0 0; padding-left:20px;">';
-    if (item.owner) html += '<li style="' + FONT + '">Owner: ' + escapeHtml(item.owner) + '</li>';
-    if (item.related_gantt_task) html += '<li style="' + FONT + '">Related Gantt Task: ' + escapeHtml(item.related_gantt_task) + '</li>';
-    if (item.due_date) html += '<li style="' + FONT + '">Due Date: ' + escapeHtml(item.due_date) + '</li>';
-    if (item.impact) html += '<li style="' + FONT + '">Impact if Delayed: ' + escapeHtml(item.impact) + '</li>';
-    html += '</ul></li>';
-  });
-  html += '</ol>';
-  html += greyHr;
-  html += '<p style="' + FONT_BOLD + ' margin:4px 0;">ADDITIONAL ACTION ITEMS</p>';
-  html += greyHr;
-  html += '<ul style="' + FONT + ' padding-left:24px; margin:10px 0;">';
-  actionItems.forEach(function(a) {
-    html += '<li style="' + FONT + '">' + escapeHtml(a.action || '') + ' &ndash; Owner: ' + escapeHtml(a.owner || 'TBD') + ' | Due: ' + escapeHtml(a.due || 'TBD') + '</li>';
-  });
-  html += '</ul>';
-  html += greyHr;
-  html += '<p style="' + FONT_BOLD + ' margin:4px 0;">NEXT STEPS</p>';
-  html += greyHr;
-  html += '<ul style="' + FONT + ' padding-left:24px; margin:10px 0;">';
-  nextSteps.forEach(function(s) { html += '<li style="' + FONT + '">' + escapeHtml(s) + '</li>'; });
-  html += '</ul>';
-  html += greyHr;
-  html += '<p style="' + FONT + ' margin:10px 0;">' + escapeHtml(json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.')) + '</p>';
-  html += '<p style="' + FONT + ' margin:10px 0;">Best regards,<br>' + escapeHtml(senderName) + '</p>';
-  html += '</div>';
-
-  emailHtml = html;
-
-  var divider = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-  var text = 'Subject: ' + subject + '\n\n';
-  text += 'Hi ' + clientName + ',\n\n';
-  text += (json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '\n\n';
-  text += divider + '\n🔴 CRITICAL PATH ITEMS\n' + divider + '\n\n';
-  criticalItems.forEach(function(item, i) {
-    text += (i + 1) + '. ' + (item.title || '') + '\n';
-    if (item.owner) text += '   • Owner: ' + item.owner + '\n';
-    if (item.related_gantt_task) text += '   • Related Gantt Task: ' + item.related_gantt_task + '\n';
-    if (item.due_date) text += '   • Due Date: ' + item.due_date + '\n';
-    if (item.impact) text += '   • Impact if Delayed: ' + item.impact + '\n';
-    text += '\n';
-  });
-  text += divider + '\nADDITIONAL ACTION ITEMS\n' + divider + '\n\n';
-  actionItems.forEach(function(a) {
-    text += '• ' + (a.action || '') + ' – Owner: ' + (a.owner || 'TBD') + ' | Due: ' + (a.due || 'TBD') + '\n';
-  });
-  text += '\n' + divider + '\nNEXT STEPS\n' + divider + '\n\n';
-  nextSteps.forEach(function(s) { text += '• ' + s + '\n'; });
-  text += '\n' + divider + '\n\n';
-  text += (json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions.')) + '\n\n';
-  text += 'Best regards,\n' + senderName;
-
-  emailText = text;
-  document.getElementById('emailPreview').innerHTML = html;
-}
-
-function showError(msg) {
-  var b = document.getElementById('errorBox');
-  b.textContent = msg;
-  b.style.display = 'block';
-}
-
-function copyHtml() {
+document.getElementById("transcriptFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  document.getElementById("transcriptInfo").textContent = "Reading " + f.name + "...";
   try {
-    var blobHtml = new Blob([emailHtml], { type: 'text/html' });
-    var blobText = new Blob([emailText], { type: 'text/plain' });
-    var data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
-    navigator.clipboard.write(data).then(function() {
-      var b = document.getElementById('copyHtmlBtn');
-      b.textContent = '✅ Copied! Paste into Outlook/Gmail';
-      setTimeout(function() { b.innerHTML = '&#128203; Copy Formatted (for Outlook/Gmail)'; }, 2500);
-    }).catch(function() {
-      navigator.clipboard.writeText(emailText);
-      alert('Formatted copy not supported. Plain text copied instead.');
-    });
-  } catch (e) {
-    navigator.clipboard.writeText(emailText);
-    alert('Formatted copy not supported. Plain text copied instead.');
+    transcriptText = await readFileAny(f);
+    document.getElementById("transcriptInfo").textContent = "✓ Loaded " + f.name + " (" + transcriptText.length + " chars)";
+  } catch (err) {
+    document.getElementById("transcriptInfo").textContent = "Error: " + err.message;
   }
+});
+
+function buildPrompt(prefs) {
+  return `You are drafting a post-meeting project email for Elemex, a facade panel DESIGNER and SUPPLIER. Elemex designs and manufactures panels and delivers them to the installer. Elemex DOES NOT install. Write from Elemex's point of view.
+
+STRICT RULES:
+- NEVER mention budgets, costs, pricing, payments, or financials of any kind.
+- Do NOT write from the installer's perspective.
+- Body must be direct with NO pleasantries or filler.
+- Critical Path Items must be driven by the IMPORTANT ITEMS raised in the meeting transcript. Cross-reference the Gantt chart to assign realistic due dates and explain schedule impact.
+- Use point form for all items.
+
+Output JSON only with this schema:
+{
+  "subject": "string",
+  "opening": "one short sentence referencing the meeting",
+  "critical_items": [
+    { "title": "string", "owner": "string", "gantt_task": "string", "due_date": "string", "impact": "string" }
+  ],
+  "action_items": [
+    { "item": "string", "owner": "string", "due": "string" }
+  ],
+  "next_steps": ["string"]
 }
 
-function copyText() {
-  navigator.clipboard.writeText(emailText).then(function() {
-    var b = document.getElementById('copyTextBtn');
-    b.textContent = '✅ Copied!';
-    setTimeout(function() { b.textContent = 'Copy as Plain Text'; }, 2000);
-  });
+PREFERENCES:
+Client: ${prefs.clientName}
+Project: ${prefs.projectName}
+Meeting Date: ${prefs.meetingDate}
+Next Meeting: ${prefs.nextMeeting}
+Sender: ${prefs.senderName}
+Review Deadline: ${prefs.reviewDeadline}
+Extra Instructions: ${prefs.extra}
+
+GANTT TEXT:
+${ganttText.slice(0, 12000)}
+
+TRANSCRIPT:
+${transcriptText.slice(0, 12000)}`;
 }
 
-['ganttDrop', 'transcriptDrop'].forEach(function(id) {
-  var el = document.getElementById(id);
-  el.addEventListener('dragover', function(e) { e.preventDefault(); el.style.borderColor = '#e07b00'; });
-  el.addEventListener('dragleave', function() { el.style.borderColor = '#ddd'; });
-  el.addEventListener('drop', function(e) {
-    e.preventDefault();
-    el.style.borderColor = '#ddd';
-    var f = e.dataTransfer.files[0];
-    if (!f) return;
-    if (id === 'ganttDrop') handleGantt(f);
-    else handleTranscript(f);
-  });
+function renderEmail(data, prefs) {
+  const crit = (data.critical_items || []).map((it, i) => `
+    <li style="margin-bottom:10px;">
+      <strong>${it.title || ""}</strong>
+      <ul style="margin:4px 0 0 0; padding-left:20px;">
+        <li>Owner: ${it.owner || ""}</li>
+        <li>Related Gantt Task: ${it.gantt_task || ""}</li>
+        <li>Due Date: ${it.due_date || ""}</li>
+        <li>Impact if Delayed: ${it.impact || ""}</li>
+      </ul>
+    </li>`).join("");
+
+  const actions = (data.action_items || []).map(a =>
+    `<li>${a.item || ""} — Owner: ${a.owner || ""} | Due: ${a.due || ""}</li>`).join("");
+
+  const steps = (data.next_steps || []).map(s => `<li>${s}</li>`).join("");
+
+  return `
+<div style="font-family:Arial, sans-serif; font-size:13px; color:#222; line-height:1.5;">
+  <p><strong>Subject:</strong> ${data.subject || (prefs.projectName + " Project Update")}</p>
+  <p>Hi ${prefs.clientName || "[Client]"},</p>
+  <p>${data.opening || "Thank you for your time today."} Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.</p>
+
+  <hr style="border:none; border-top:2px solid #c0392b; height:0; padding:0; margin:14px 0 6px;">
+  <p style="margin:0; color:#c0392b; font-weight:bold; font-size:15px;">🔴 CRITICAL PATH ITEMS</p>
+  <hr style="border:none; border-top:2px solid #c0392b; height:0; padding:0; margin:6px 0 12px;">
+
+  <ol style="padding-left:22px; margin:0;">${crit}</ol>
+
+  <hr style="border:none; border-top:1px solid #bbb; height:0; padding:0; margin:16px 0 6px;">
+  <p style="margin:0; font-weight:bold; font-size:14px;">ADDITIONAL ACTION ITEMS</p>
+  <hr style="border:none; border-top:1px solid #bbb; height:0; padding:0; margin:6px 0 10px;">
+  <ul style="padding-left:22px; margin:0;">${actions}</ul>
+
+  <hr style="border:none; border-top:1px solid #bbb; height:0; padding:0; margin:16px 0 6px;">
+  <p style="margin:0; font-weight:bold; font-size:14px;">NEXT STEPS</p>
+  <hr style="border:none; border-top:1px solid #bbb; height:0; padding:0; margin:6px 0 10px;">
+  <ul style="padding-left:22px; margin:0;">
+    <li>Next Meeting: ${prefs.nextMeeting || "[TBD]"}</li>
+    ${steps}
+  </ul>
+
+  <p style="margin-top:16px;">Please review the attached meeting minutes and let us know by ${prefs.reviewDeadline || "[Date]"} if you have any corrections or additions.</p>
+  <p>Best regards,<br>${prefs.senderName || "[Your Name]"}<br>Elemex</p>
+</div>`;
+}
+
+document.getElementById("generateBtn").addEventListener("click", async () => {
+  const prefs = {
+    clientName: document.getElementById("clientName").value.trim(),
+    projectName: document.getElementById("projectName").value.trim(),
+    meetingDate: document.getElementById("meetingDate").value,
+    nextMeeting: document.getElementById("nextMeeting").value.trim(),
+    senderName: document.getElementById("senderName").value.trim(),
+    reviewDeadline: document.getElementById("reviewDeadline").value.trim(),
+    extra: document.getElementById("extraInstructions").value.trim()
+  };
+  const apiKey = document.getElementById("apiKey").value.trim();
+  const status = document.getElementById("status");
+
+  if (!apiKey) { status.textContent = "Enter your Groq API key."; return; }
+  if (!ganttText) { status.textContent = "Upload a Gantt PDF."; return; }
+  if (!transcriptText) { status.textContent = "Upload a meeting transcript."; return; }
+
+  status.textContent = "Contacting Groq...";
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+        messages: [
+          { role: "system", content: "Return only valid JSON matching the schema in the user message." },
+          { role: "user", content: buildPrompt(prefs) }
+        ]
+      })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error("Groq error: " + res.status + " " + t);
+    }
+    const json = await res.json();
+    const content = json.choices?.[0]?.message?.content || "{}";
+    const data = JSON.parse(content);
+    const html = renderEmail(data, prefs);
+    document.getElementById("preview").innerHTML = html;
+    status.textContent = "✓ Email generated.";
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
+  }
+});
+
+document.getElementById("copyHtmlBtn").addEventListener("click", async () => {
+  const html = document.getElementById("preview").innerHTML;
+  const text = document.getElementById("preview").innerText;
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([text], { type: "text/plain" })
+      })
+    ]);
+    document.getElementById("status").textContent = "✓ Formatted email copied.";
+  } catch {
+    document.getElementById("status").textContent = "Copy failed — try Copy Plain Text.";
+  }
+});
+
+document.getElementById("copyTextBtn").addEventListener("click", async () => {
+  const text = document.getElementById("preview").innerText;
+  await navigator.clipboard.writeText(text);
+  document.getElementById("status").textContent = "✓ Plain text copied.";
 });
 </script>
 </body>

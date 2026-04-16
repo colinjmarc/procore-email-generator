@@ -33,13 +33,18 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 .generate-btn:disabled { background: #ccc; cursor: not-allowed; }
 .error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
 .output-area { display: none; margin-top: 20px; }
-.output-area textarea { min-height: 500px; font-size: 14px; line-height: 1.6; font-family: 'Courier New', monospace; }
-.copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+.email-preview { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; min-height: 400px; font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; margin-right: 8px; }
 .copy-btn:hover { background: #1e4d1e; }
+.copy-btn.secondary { background: #555; }
+.copy-btn.secondary:hover { background: #333; }
 .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .groq-link { font-size: 12px; color: #888; margin-top: 6px; }
 .groq-link a { color: #e07b00; }
+.email-preview .critical-title { color: #c0392b; font-weight: bold; font-size: 16px; }
+.email-preview .section-title { font-weight: bold; font-size: 14px; }
+.email-preview .divider { color: #aaa; }
 </style>
 </head>
 <body>
@@ -128,9 +133,10 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
     <button class="generate-btn" id="generateBtn" type="button">&#10024; Generate Email with AI</button>
     <div class="error-box" id="errorBox"></div>
     <div class="output-area" id="outputArea">
-      <label>Generated Email</label>
-      <textarea id="emailOutput" readonly></textarea>
-      <button class="copy-btn" id="copyBtn" type="button">&#128203; Copy to Clipboard</button>
+      <label>Generated Email Preview</label>
+      <div class="email-preview" id="emailPreview"></div>
+      <button class="copy-btn" id="copyHtmlBtn" type="button">&#128203; Copy Formatted (for Outlook/Gmail)</button>
+      <button class="copy-btn secondary" id="copyTextBtn" type="button">Copy as Plain Text</button>
     </div>
   </div>
 
@@ -138,6 +144,8 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 <script>
 var ganttText = '';
 var transcriptContent = '';
+var emailHtml = '';
+var emailText = '';
 
 document.getElementById('showBtn').addEventListener('click', function() {
   var inp = document.getElementById('apiKey');
@@ -150,7 +158,8 @@ document.getElementById('transcriptDrop').addEventListener('click', function() {
 document.getElementById('ganttFile').addEventListener('change', function() { if (this.files[0]) handleGantt(this.files[0]); });
 document.getElementById('transcriptFile').addEventListener('change', function() { if (this.files[0]) handleTranscript(this.files[0]); });
 document.getElementById('generateBtn').addEventListener('click', generateEmail);
-document.getElementById('copyBtn').addEventListener('click', copyEmail);
+document.getElementById('copyHtmlBtn').addEventListener('click', copyHtml);
+document.getElementById('copyTextBtn').addEventListener('click', copyText);
 
 function extractPdfText(file) {
   return new Promise(function(resolve) {
@@ -241,53 +250,40 @@ function generateEmail() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
-  var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels. Elemex does NOT install — scope is design, fabrication, and delivery only. Write entirely from Elemex\'s perspective.\n\n'
-    + 'TODAY\'S DATE: ' + todayStr + '\n\n'
-    + 'HOW TO BUILD THE CRITICAL PATH SECTION:\n'
-    + '1. Read the meeting transcript and identify the most important items discussed — topics that affect panel design, fabrication, delivery, approvals, submittals, RFIs, coordination with the installer, or anything time-sensitive\n'
-    + '2. For EACH important item from the meeting, cross-reference the Gantt chart to find the associated task(s) and due date(s)\n'
-    + '3. Use the Gantt dates to determine how the schedule may be affected if the item is delayed or unresolved\n'
-    + '4. The critical path items listed are driven by the MEETING CONTENT — not by the raw Gantt. The Gantt is only used to assign dates and show schedule impact\n'
-    + '5. Include as many critical path items as were raised in the meeting — do not limit the number\n\n'
+  var prompt = 'You are a project coordinator at Elemex (designs and supplies architectural facade panels — does NOT install). Write from Elemex\'s perspective only.\n\n'
+    + 'TODAY: ' + todayStr + '\n\n'
+    + 'OUTPUT FORMAT: Return ONLY a JSON object with this exact structure (no markdown, no commentary):\n'
+    + '{\n'
+    + '  "subject": "...",\n'
+    + '  "greeting": "Hi ' + clientName + ',",\n'
+    + '  "opening": "Thank you for your time today. ...",\n'
+    + '  "critical_path_items": [\n'
+    + '    { "title": "...", "owner": "...", "related_gantt_task": "...", "due_date": "...", "impact": "..." }\n'
+    + '  ],\n'
+    + '  "additional_action_items": [\n'
+    + '    { "action": "...", "owner": "...", "due": "..." }\n'
+    + '  ],\n'
+    + '  "next_steps": [\n'
+    + '    "Next Meeting: ' + nextMeeting + '",\n'
+    + '    "..."\n'
+    + '  ],\n'
+    + '  "closing": "Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' ..."\n'
+    + '}\n\n'
+    + 'HOW TO BUILD CRITICAL PATH ITEMS:\n'
+    + '1. Identify the important topics raised in the meeting transcript (panel design, fabrication, delivery, approvals, submittals, RFIs, coordination, schedule-sensitive items)\n'
+    + '2. For EACH important meeting item, cross-reference the Gantt to find the related task and due date\n'
+    + '3. Meeting drives WHICH items are included; Gantt provides dates and schedule impact\n'
+    + '4. Include every important meeting item — do not limit the number\n\n'
     + 'RULES:\n'
-    + '- Do NOT mention budgets, costs, or financials\n'
-    + '- Additional action items = smaller items from the meeting that are not schedule-critical\n'
-    + '- Use the EXACT template format below — no deviations, no extra sections\n\n'
+    + '- No budgets, costs, or financials\n'
+    + '- Additional action items = smaller meeting items that are not schedule-critical\n'
+    + '- Return valid JSON only, no extra text\n\n'
     + 'PROJECT: ' + projectName + '\n'
-    + 'CLIENT NAME: ' + clientName + '\n'
     + 'MEETING DATE: ' + meetingDate + '\n'
-    + 'NEXT MEETING: ' + nextMeeting + '\n'
     + 'SENDER: ' + senderName + '\n'
-    + 'REVIEW DEADLINE: ' + reviewDeadline + '\n'
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
-    + '\nGANTT CHART / SCHEDULE DATA (reference only — use for dates and schedule impact):\n' + (ganttText || 'No Gantt chart provided')
-    + '\n\nMEETING TRANSCRIPT (primary source — critical path items come from here):\n' + (transcript || 'No transcript provided')
-    + '\n\nOUTPUT THE EMAIL USING THIS EXACT TEMPLATE:\n\n'
-    + 'SUBJECT: ' + projectName + ' \u2013 Post-Meeting Summary ' + meetingDate + '\n\n'
-    + 'Hi ' + clientName + ',\n\n'
-    + 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.\n\n'
-    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
-    + '\ud83d\udd34 CRITICAL PATH ITEMS\n'
-    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + 'For each important item from the meeting (number them starting at 1), use this format:\n'
-    + '[number]. [Item Title — based on what was discussed in the meeting]\n'
-    + '   \u2022 Owner: [Name / Team from transcript]\n'
-    + '   \u2022 Related Gantt Task: [Task name from Gantt]\n'
-    + '   \u2022 Due Date: [Date from Gantt]\n'
-    + '   \u2022 Impact if Delayed: [One sentence on how this affects the facade panel schedule based on Gantt dependencies]\n\n'
-    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
-    + 'ADDITIONAL ACTION ITEMS\n'
-    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + '\u2022 [Smaller action from transcript] \u2013 Owner: [Name] | Due: [Date]\n\n'
-    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
-    + 'NEXT STEPS\n'
-    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + '\u2022 Next Meeting: ' + nextMeeting + '\n'
-    + '\u2022 [Any other relevant next steps from the transcript]\n\n'
-    + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + 'Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.\n\n'
-    + 'Best regards,\n'
-    + senderName;
+    + '\nGANTT DATA:\n' + (ganttText || 'None')
+    + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'None');
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -299,7 +295,8 @@ function generateEmail() {
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 2500
+      max_tokens: 2500,
+      response_format: { type: 'json_object' }
     })
   })
   .then(function(r) {
@@ -307,12 +304,99 @@ function generateEmail() {
     return r.json();
   })
   .then(function(d) {
-    document.getElementById('emailOutput').value = d.choices[0].message.content;
+    var json = JSON.parse(d.choices[0].message.content);
+    renderEmail(json, clientName, projectName, meetingDate, nextMeeting, senderName, reviewDeadline);
     outputArea.style.display = 'block';
     outputArea.scrollIntoView({ behavior: 'smooth' });
   })
   .catch(function(e) { showError(e.message); })
   .finally(function() { btn.disabled = false; btn.innerHTML = '&#10024; Generate Email with AI'; });
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, senderName, reviewDeadline) {
+  var subject = json.subject || (projectName + ' – Post-Meeting Summary ' + meetingDate);
+  var divider = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  var criticalItems = json.critical_path_items || [];
+  var actionItems = json.additional_action_items || [];
+  var nextSteps = json.next_steps || [];
+
+  // HTML version (for copying to Outlook/Gmail with formatting)
+  var html = '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;color:#333;">';
+  html += '<p><strong>Subject:</strong> ' + escapeHtml(subject) + '</p>';
+  html += '<p>Hi ' + escapeHtml(clientName) + ',</p>';
+  html += '<p>' + escapeHtml(json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '</p>';
+  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
+  html += '<p style="color:#c0392b;font-weight:bold;font-size:16px;margin:4px 0;">🔴 CRITICAL PATH ITEMS</p>';
+  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
+  html += '<ol style="padding-left:20px;">';
+  criticalItems.forEach(function(item) {
+    html += '<li style="margin-bottom:12px;"><strong>' + escapeHtml(item.title || '') + '</strong>';
+    html += '<ul style="margin-top:4px;">';
+    if (item.owner) html += '<li>Owner: ' + escapeHtml(item.owner) + '</li>';
+    if (item.related_gantt_task) html += '<li>Related Gantt Task: ' + escapeHtml(item.related_gantt_task) + '</li>';
+    if (item.due_date) html += '<li>Due Date: ' + escapeHtml(item.due_date) + '</li>';
+    if (item.impact) html += '<li>Impact if Delayed: ' + escapeHtml(item.impact) + '</li>';
+    html += '</ul></li>';
+  });
+  html += '</ol>';
+  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
+  html += '<p style="font-weight:bold;margin:4px 0;">ADDITIONAL ACTION ITEMS</p>';
+  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
+  html += '<ul>';
+  actionItems.forEach(function(a) {
+    html += '<li>' + escapeHtml(a.action || '') + ' – Owner: ' + escapeHtml(a.owner || 'TBD') + ' | Due: ' + escapeHtml(a.due || 'TBD') + '</li>';
+  });
+  html += '</ul>';
+  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
+  html += '<p style="font-weight:bold;margin:4px 0;">NEXT STEPS</p>';
+  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
+  html += '<ul>';
+  nextSteps.forEach(function(s) { html += '<li>' + escapeHtml(s) + '</li>'; });
+  html += '</ul>';
+  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
+  html += '<p>' + escapeHtml(json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.')) + '</p>';
+  html += '<p>Best regards,<br>' + escapeHtml(senderName) + '</p>';
+  html += '</div>';
+
+  emailHtml = html;
+
+  // Plain text version
+  var text = 'Subject: ' + subject + '\n\n';
+  text += 'Hi ' + clientName + ',\n\n';
+  text += (json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '\n\n';
+  text += divider + '\n';
+  text += '🔴 CRITICAL PATH ITEMS\n';
+  text += divider + '\n\n';
+  criticalItems.forEach(function(item, i) {
+    text += (i + 1) + '. ' + (item.title || '') + '\n';
+    if (item.owner) text += '   • Owner: ' + item.owner + '\n';
+    if (item.related_gantt_task) text += '   • Related Gantt Task: ' + item.related_gantt_task + '\n';
+    if (item.due_date) text += '   • Due Date: ' + item.due_date + '\n';
+    if (item.impact) text += '   • Impact if Delayed: ' + item.impact + '\n';
+    text += '\n';
+  });
+  text += divider + '\n';
+  text += 'ADDITIONAL ACTION ITEMS\n';
+  text += divider + '\n\n';
+  actionItems.forEach(function(a) {
+    text += '• ' + (a.action || '') + ' – Owner: ' + (a.owner || 'TBD') + ' | Due: ' + (a.due || 'TBD') + '\n';
+  });
+  text += '\n' + divider + '\n';
+  text += 'NEXT STEPS\n';
+  text += divider + '\n\n';
+  nextSteps.forEach(function(s) { text += '• ' + s + '\n'; });
+  text += '\n' + divider + '\n\n';
+  text += (json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions.')) + '\n\n';
+  text += 'Best regards,\n' + senderName;
+
+  emailText = text;
+
+  document.getElementById('emailPreview').innerHTML = html;
 }
 
 function showError(msg) {
@@ -321,11 +405,26 @@ function showError(msg) {
   b.style.display = 'block';
 }
 
-function copyEmail() {
-  navigator.clipboard.writeText(document.getElementById('emailOutput').value).then(function() {
-    var b = document.getElementById('copyBtn');
-    b.textContent = 'Copied!';
-    setTimeout(function() { b.innerHTML = '&#128203; Copy to Clipboard'; }, 2000);
+function copyHtml() {
+  var blobHtml = new Blob([emailHtml], { type: 'text/html' });
+  var blobText = new Blob([emailText], { type: 'text/plain' });
+  var data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
+  navigator.clipboard.write(data).then(function() {
+    var b = document.getElementById('copyHtmlBtn');
+    b.textContent = '✅ Copied! Paste into Outlook/Gmail';
+    setTimeout(function() { b.innerHTML = '&#128203; Copy Formatted (for Outlook/Gmail)'; }, 2500);
+  }).catch(function() {
+    // Fallback
+    navigator.clipboard.writeText(emailText);
+    alert('Formatted copy not supported in this browser. Plain text copied instead.');
+  });
+}
+
+function copyText() {
+  navigator.clipboard.writeText(emailText).then(function() {
+    var b = document.getElementById('copyTextBtn');
+    b.textContent = '✅ Copied!';
+    setTimeout(function() { b.textContent = 'Copy as Plain Text'; }, 2000);
   });
 }
 

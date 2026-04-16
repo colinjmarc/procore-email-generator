@@ -311,25 +311,20 @@ function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, se
   var FONT = 'font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6; color:#333333;';
   var FONT_BOLD = 'font-family:Segoe UI, Arial, sans-serif; font-size:14px; line-height:1.6; color:#333333; font-weight:bold;';
   var RED = '#c0392b';
-  var GREY = '#555555';
+  var GREY = '#999999';
 
-  // Red divider using a table (email-client safe)
-  function redLine() {
-    return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; width:100%; margin:8px 0;"><tr><td style="height:2px; line-height:2px; font-size:2px; background-color:' + RED + ';">&nbsp;</td></tr></table>';
-  }
-  // Grey divider
-  function greyLine() {
-    return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; width:100%; margin:8px 0;"><tr><td style="height:1px; line-height:1px; font-size:1px; background-color:' + GREY + ';">&nbsp;</td></tr></table>';
-  }
+  // Thin HR dividers — Outlook/Gmail render these cleanly
+  var redHr = '<hr style="border:none; border-top:2px solid ' + RED + '; height:0; margin:10px 0; padding:0; background:none;">';
+  var greyHr = '<hr style="border:none; border-top:1px solid ' + GREY + '; height:0; margin:10px 0; padding:0; background:none;">';
 
   var html = '<div style="' + FONT + ' max-width:720px;">';
   html += '<p style="' + FONT + ' margin:0 0 10px 0;"><span style="font-weight:bold;">Subject:</span> ' + escapeHtml(subject) + '</p>';
   html += '<p style="' + FONT + ' margin:0 0 10px 0;">Hi ' + escapeHtml(clientName) + ',</p>';
   html += '<p style="' + FONT + ' margin:0 0 10px 0;">' + escapeHtml(json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '</p>';
 
-  html += redLine();
+  html += redHr;
   html += '<p style="font-family:Segoe UI, Arial, sans-serif; font-size:16px; line-height:1.4; color:' + RED + '; font-weight:bold; margin:4px 0;">&#128308; CRITICAL PATH ITEMS</p>';
-  html += redLine();
+  html += redHr;
 
   html += '<ol style="' + FONT + ' padding-left:24px; margin:10px 0;">';
   criticalItems.forEach(function(item) {
@@ -343,23 +338,23 @@ function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, se
   });
   html += '</ol>';
 
-  html += greyLine();
+  html += greyHr;
   html += '<p style="' + FONT_BOLD + ' margin:4px 0;">ADDITIONAL ACTION ITEMS</p>';
-  html += greyLine();
+  html += greyHr;
   html += '<ul style="' + FONT + ' padding-left:24px; margin:10px 0;">';
   actionItems.forEach(function(a) {
     html += '<li style="' + FONT + '">' + escapeHtml(a.action || '') + ' &ndash; Owner: ' + escapeHtml(a.owner || 'TBD') + ' | Due: ' + escapeHtml(a.due || 'TBD') + '</li>';
   });
   html += '</ul>';
 
-  html += greyLine();
+  html += greyHr;
   html += '<p style="' + FONT_BOLD + ' margin:4px 0;">NEXT STEPS</p>';
-  html += greyLine();
+  html += greyHr;
   html += '<ul style="' + FONT + ' padding-left:24px; margin:10px 0;">';
   nextSteps.forEach(function(s) { html += '<li style="' + FONT + '">' + escapeHtml(s) + '</li>'; });
   html += '</ul>';
 
-  html += greyLine();
+  html += greyHr;
   html += '<p style="' + FONT + ' margin:10px 0;">' + escapeHtml(json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.')) + '</p>';
   html += '<p style="' + FONT + ' margin:10px 0;">Best regards,<br>' + escapeHtml(senderName) + '</p>';
   html += '</div>';

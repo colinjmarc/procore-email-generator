@@ -33,7 +33,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 .generate-btn:disabled { background: #ccc; cursor: not-allowed; }
 .error-box { background: #fde8e8; border: 1px solid #f5c0c0; border-radius: 6px; padding: 12px 16px; color: #c0392b; font-size: 13px; margin-top: 12px; display: none; }
 .output-area { display: none; margin-top: 20px; }
-.email-preview { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; min-height: 400px; font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.email-preview { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; min-height: 400px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.6; }
 .copy-btn { background: #2d6a2d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; margin-right: 8px; }
 .copy-btn:hover { background: #1e4d1e; }
 .copy-btn.secondary { background: #555; }
@@ -42,9 +42,6 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #e07b00
 @keyframes spin { to { transform: rotate(360deg); } }
 .groq-link { font-size: 12px; color: #888; margin-top: 6px; }
 .groq-link a { color: #e07b00; }
-.email-preview .critical-title { color: #c0392b; font-weight: bold; font-size: 16px; }
-.email-preview .section-title { font-weight: bold; font-size: 14px; }
-.email-preview .divider { color: #aaa; }
 </style>
 </head>
 <body>
@@ -252,10 +249,9 @@ function generateEmail() {
 
   var prompt = 'You are a project coordinator at Elemex (designs and supplies architectural facade panels — does NOT install). Write from Elemex\'s perspective only.\n\n'
     + 'TODAY: ' + todayStr + '\n\n'
-    + 'OUTPUT FORMAT: Return ONLY a JSON object with this exact structure (no markdown, no commentary):\n'
+    + 'OUTPUT FORMAT: Return ONLY a JSON object with this structure (no markdown, no commentary):\n'
     + '{\n'
     + '  "subject": "...",\n'
-    + '  "greeting": "Hi ' + clientName + ',",\n'
     + '  "opening": "Thank you for your time today. ...",\n'
     + '  "critical_path_items": [\n'
     + '    { "title": "...", "owner": "...", "related_gantt_task": "...", "due_date": "...", "impact": "..." }\n'
@@ -263,24 +259,22 @@ function generateEmail() {
     + '  "additional_action_items": [\n'
     + '    { "action": "...", "owner": "...", "due": "..." }\n'
     + '  ],\n'
-    + '  "next_steps": [\n'
-    + '    "Next Meeting: ' + nextMeeting + '",\n'
-    + '    "..."\n'
-    + '  ],\n'
-    + '  "closing": "Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' ..."\n'
+    + '  "next_steps": ["Next Meeting: ' + nextMeeting + '", "..."],\n'
+    + '  "closing": "..."\n'
     + '}\n\n'
     + 'HOW TO BUILD CRITICAL PATH ITEMS:\n'
-    + '1. Identify the important topics raised in the meeting transcript (panel design, fabrication, delivery, approvals, submittals, RFIs, coordination, schedule-sensitive items)\n'
-    + '2. For EACH important meeting item, cross-reference the Gantt to find the related task and due date\n'
-    + '3. Meeting drives WHICH items are included; Gantt provides dates and schedule impact\n'
-    + '4. Include every important meeting item — do not limit the number\n\n'
+    + '1. Identify important topics raised in the transcript (panel design, fabrication, delivery, approvals, submittals, RFIs, coordination, schedule-sensitive items)\n'
+    + '2. For each, cross-reference the Gantt to find the related task and due date\n'
+    + '3. Transcript drives WHICH items are included; Gantt provides dates and schedule impact\n'
+    + '4. Include every important transcript item — do not limit the number\n\n'
     + 'RULES:\n'
     + '- No budgets, costs, or financials\n'
-    + '- Additional action items = smaller meeting items that are not schedule-critical\n'
-    + '- Return valid JSON only, no extra text\n\n'
+    + '- Additional action items = smaller transcript items not schedule-critical\n'
+    + '- Return valid JSON only\n\n'
     + 'PROJECT: ' + projectName + '\n'
     + 'MEETING DATE: ' + meetingDate + '\n'
     + 'SENDER: ' + senderName + '\n'
+    + 'REVIEW DEADLINE: ' + reviewDeadline + '\n'
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
     + '\nGANTT DATA:\n' + (ganttText || 'None')
     + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'None');
@@ -320,20 +314,25 @@ function escapeHtml(s) {
 
 function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, senderName, reviewDeadline) {
   var subject = json.subject || (projectName + ' – Post-Meeting Summary ' + meetingDate);
-  var divider = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
   var criticalItems = json.critical_path_items || [];
   var actionItems = json.additional_action_items || [];
   var nextSteps = json.next_steps || [];
 
-  // HTML version (for copying to Outlook/Gmail with formatting)
+  var RED = '#c0392b';
+  var GREY = '#555';
+  var redDivider = '<div style="border-top:2px solid ' + RED + ';margin:10px 0;"></div>';
+  var greyDivider = '<div style="border-top:1px solid ' + GREY + ';margin:10px 0;"></div>';
+
   var html = '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;color:#333;">';
-  html += '<p><strong>Subject:</strong> ' + escapeHtml(subject) + '</p>';
-  html += '<p>Hi ' + escapeHtml(clientName) + ',</p>';
-  html += '<p>' + escapeHtml(json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '</p>';
-  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
-  html += '<p style="color:#c0392b;font-weight:bold;font-size:16px;margin:4px 0;">🔴 CRITICAL PATH ITEMS</p>';
-  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
-  html += '<ol style="padding-left:20px;">';
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;"><strong>Subject:</strong> ' + escapeHtml(subject) + '</p>';
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">Hi ' + escapeHtml(clientName) + ',</p>';
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">' + escapeHtml(json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '</p>';
+
+  html += redDivider;
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;color:' + RED + ';font-weight:bold;font-size:16px;margin:0;">&#128308; CRITICAL PATH ITEMS</p>';
+  html += redDivider;
+
+  html += '<ol style="font-family:Segoe UI,Arial,sans-serif;padding-left:20px;">';
   criticalItems.forEach(function(item) {
     html += '<li style="margin-bottom:12px;"><strong>' + escapeHtml(item.title || '') + '</strong>';
     html += '<ul style="margin-top:4px;">';
@@ -344,28 +343,32 @@ function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, se
     html += '</ul></li>';
   });
   html += '</ol>';
-  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
-  html += '<p style="font-weight:bold;margin:4px 0;">ADDITIONAL ACTION ITEMS</p>';
-  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
-  html += '<ul>';
+
+  html += greyDivider;
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;font-weight:bold;font-size:14px;margin:0;">ADDITIONAL ACTION ITEMS</p>';
+  html += greyDivider;
+  html += '<ul style="font-family:Segoe UI,Arial,sans-serif;">';
   actionItems.forEach(function(a) {
-    html += '<li>' + escapeHtml(a.action || '') + ' – Owner: ' + escapeHtml(a.owner || 'TBD') + ' | Due: ' + escapeHtml(a.due || 'TBD') + '</li>';
+    html += '<li>' + escapeHtml(a.action || '') + ' &ndash; Owner: ' + escapeHtml(a.owner || 'TBD') + ' | Due: ' + escapeHtml(a.due || 'TBD') + '</li>';
   });
   html += '</ul>';
-  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
-  html += '<p style="font-weight:bold;margin:4px 0;">NEXT STEPS</p>';
-  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
-  html += '<ul>';
+
+  html += greyDivider;
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;font-weight:bold;font-size:14px;margin:0;">NEXT STEPS</p>';
+  html += greyDivider;
+  html += '<ul style="font-family:Segoe UI,Arial,sans-serif;">';
   nextSteps.forEach(function(s) { html += '<li>' + escapeHtml(s) + '</li>'; });
   html += '</ul>';
-  html += '<p style="color:#aaa;font-family:monospace;margin:0;">' + divider + '</p>';
-  html += '<p>' + escapeHtml(json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.')) + '</p>';
-  html += '<p>Best regards,<br>' + escapeHtml(senderName) + '</p>';
+
+  html += greyDivider;
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">' + escapeHtml(json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions. If any critical path items need to be re-prioritized or if you have concerns about the listed deadlines, please don\'t hesitate to reach out.')) + '</p>';
+  html += '<p style="font-family:Segoe UI,Arial,sans-serif;">Best regards,<br>' + escapeHtml(senderName) + '</p>';
   html += '</div>';
 
   emailHtml = html;
 
-  // Plain text version
+  // Plain text fallback
+  var divider = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
   var text = 'Subject: ' + subject + '\n\n';
   text += 'Hi ' + clientName + ',\n\n';
   text += (json.opening || 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.') + '\n\n';
@@ -380,22 +383,17 @@ function renderEmail(json, clientName, projectName, meetingDate, nextMeeting, se
     if (item.impact) text += '   • Impact if Delayed: ' + item.impact + '\n';
     text += '\n';
   });
-  text += divider + '\n';
-  text += 'ADDITIONAL ACTION ITEMS\n';
-  text += divider + '\n\n';
+  text += divider + '\nADDITIONAL ACTION ITEMS\n' + divider + '\n\n';
   actionItems.forEach(function(a) {
     text += '• ' + (a.action || '') + ' – Owner: ' + (a.owner || 'TBD') + ' | Due: ' + (a.due || 'TBD') + '\n';
   });
-  text += '\n' + divider + '\n';
-  text += 'NEXT STEPS\n';
-  text += divider + '\n\n';
+  text += '\n' + divider + '\nNEXT STEPS\n' + divider + '\n\n';
   nextSteps.forEach(function(s) { text += '• ' + s + '\n'; });
   text += '\n' + divider + '\n\n';
   text += (json.closing || ('Please review the attached meeting minutes and let us know by ' + reviewDeadline + ' if you have any corrections or additions.')) + '\n\n';
   text += 'Best regards,\n' + senderName;
 
   emailText = text;
-
   document.getElementById('emailPreview').innerHTML = html;
 }
 
@@ -406,18 +404,22 @@ function showError(msg) {
 }
 
 function copyHtml() {
-  var blobHtml = new Blob([emailHtml], { type: 'text/html' });
-  var blobText = new Blob([emailText], { type: 'text/plain' });
-  var data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
-  navigator.clipboard.write(data).then(function() {
-    var b = document.getElementById('copyHtmlBtn');
-    b.textContent = '✅ Copied! Paste into Outlook/Gmail';
-    setTimeout(function() { b.innerHTML = '&#128203; Copy Formatted (for Outlook/Gmail)'; }, 2500);
-  }).catch(function() {
-    // Fallback
+  try {
+    var blobHtml = new Blob([emailHtml], { type: 'text/html' });
+    var blobText = new Blob([emailText], { type: 'text/plain' });
+    var data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
+    navigator.clipboard.write(data).then(function() {
+      var b = document.getElementById('copyHtmlBtn');
+      b.textContent = '✅ Copied! Paste into Outlook/Gmail';
+      setTimeout(function() { b.innerHTML = '&#128203; Copy Formatted (for Outlook/Gmail)'; }, 2500);
+    }).catch(function() {
+      navigator.clipboard.writeText(emailText);
+      alert('Formatted copy not supported. Plain text copied instead.');
+    });
+  } catch (e) {
     navigator.clipboard.writeText(emailText);
-    alert('Formatted copy not supported in this browser. Plain text copied instead.');
-  });
+    alert('Formatted copy not supported. Plain text copied instead.');
+  }
 }
 
 function copyText() {

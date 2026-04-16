@@ -234,17 +234,28 @@ function generateEmail() {
   if (!apiKey) { showError('Please enter your Groq API key.'); return; }
   if (!ganttText && !transcript) { showError('Please upload a Gantt PDF and/or provide a meeting transcript.'); return; }
 
+  // Calculate today and 4 weeks from now
+  var today = new Date();
+  var fourWeeks = new Date(today);
+  fourWeeks.setDate(today.getDate() + 28);
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var todayStr = monthNames[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+  var fourWeeksStr = monthNames[fourWeeks.getMonth()] + ' ' + fourWeeks.getDate() + ', ' + fourWeeks.getFullYear();
+
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
   var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels. Elemex does NOT install — scope is design, fabrication, and delivery only. Write entirely from Elemex\'s perspective.\n\n'
+    + 'TODAY\'S DATE: ' + todayStr + '\n'
+    + '4-WEEK WINDOW: ' + todayStr + ' to ' + fourWeeksStr + '\n\n'
     + 'RULES:\n'
-    + '- Do NOT mention budgets, costs, or financials\n'
-    + '- Identify ALL critical path items from the Gantt chart that are upcoming or at risk — do not limit the number, include every one that matters\n'
+    + '- CRITICAL PATH ITEMS must only include tasks from the Gantt chart that fall within the next 4 weeks (' + todayStr + ' to ' + fourWeeksStr + ')\n'
+    + '- Include every Gantt task that falls in this window — do not skip any\n'
     + '- Cross-reference each critical path item against the meeting transcript to determine owner, risk, and impact\n'
-    + '- Additional action items come from the meeting transcript discussion points\n'
-    + '- Use the EXACT formatting shown in the template below — no deviations\n'
-    + '- Do not add any extra sections or commentary outside the template\n\n'
+    + '- If a task has no due date visible in the Gantt, exclude it from critical path\n'
+    + '- Do NOT mention budgets, costs, or financials\n'
+    + '- Additional action items come from the meeting transcript only\n'
+    + '- Use the EXACT template format below — no deviations, no extra sections\n\n'
     + 'PROJECT: ' + projectName + '\n'
     + 'CLIENT NAME: ' + clientName + '\n'
     + 'MEETING DATE: ' + meetingDate + '\n'
@@ -254,23 +265,22 @@ function generateEmail() {
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
     + '\nGANTT CHART / SCHEDULE DATA:\n' + (ganttText || 'No Gantt chart provided')
     + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
-    + '\n\nOUTPUT THE EMAIL USING THIS EXACT TEMPLATE — replace all bracketed placeholders with real content:\n\n'
+    + '\n\nOUTPUT THE EMAIL USING THIS EXACT TEMPLATE:\n\n'
     + 'SUBJECT: ' + projectName + ' \u2013 Post-Meeting Summary ' + meetingDate + '\n\n'
     + 'Hi ' + clientName + ',\n\n'
     + 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.\n\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
-    + '\ud83d\udd34 CRITICAL PATH ITEMS\n'
+    + '\ud83d\udd34 CRITICAL PATH ITEMS (' + todayStr + ' \u2013 ' + fourWeeksStr + ')\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + 'For each critical path item from the Gantt (number them starting at 1), use this format:\n'
-    + '[number]. [Critical Item Title]\n'
-    + '   \u2022 Owner: [Name / Team]\n'
-    + '   \u2022 Due Date: [Date]\n'
-    + '   \u2022 Impact if Delayed: [One sentence describing consequence to facade panel installation schedule]\n\n'
+    + 'For each Gantt task due within the 4-week window, use this format:\n'
+    + '[number]. [Task Name from Gantt]\n'
+    + '   \u2022 Owner: [Name / Team from transcript or Gantt]\n'
+    + '   \u2022 Due Date: [Exact date from Gantt]\n'
+    + '   \u2022 Impact if Delayed: [One sentence on consequence to facade panel installation]\n\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
     + 'ADDITIONAL ACTION ITEMS\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + 'List each action item from the meeting transcript (not already covered in critical path) using this format:\n'
-    + '\u2022 [Action Item] \u2013 Owner: [Name] | Due: [Date]\n\n'
+    + '\u2022 [Action from transcript] \u2013 Owner: [Name] | Due: [Date]\n\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
     + 'NEXT STEPS\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'

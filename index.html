@@ -234,27 +234,24 @@ function generateEmail() {
   if (!apiKey) { showError('Please enter your Groq API key.'); return; }
   if (!ganttText && !transcript) { showError('Please upload a Gantt PDF and/or provide a meeting transcript.'); return; }
 
-  // Calculate today and 4 weeks from now
   var today = new Date();
-  var fourWeeks = new Date(today);
-  fourWeeks.setDate(today.getDate() + 28);
   var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   var todayStr = monthNames[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
-  var fourWeeksStr = monthNames[fourWeeks.getMonth()] + ' ' + fourWeeks.getDate() + ', ' + fourWeeks.getFullYear();
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Generating...';
 
   var prompt = 'You are a project coordinator at Elemex, a company that designs and supplies architectural facade panels. Elemex does NOT install — scope is design, fabrication, and delivery only. Write entirely from Elemex\'s perspective.\n\n'
-    + 'TODAY\'S DATE: ' + todayStr + '\n'
-    + '4-WEEK WINDOW: ' + todayStr + ' to ' + fourWeeksStr + '\n\n'
+    + 'TODAY\'S DATE: ' + todayStr + '\n\n'
+    + 'HOW TO BUILD THE CRITICAL PATH SECTION:\n'
+    + '1. Read the meeting transcript and identify the most important items discussed — topics that affect panel design, fabrication, delivery, approvals, submittals, RFIs, coordination with the installer, or anything time-sensitive\n'
+    + '2. For EACH important item from the meeting, cross-reference the Gantt chart to find the associated task(s) and due date(s)\n'
+    + '3. Use the Gantt dates to determine how the schedule may be affected if the item is delayed or unresolved\n'
+    + '4. The critical path items listed are driven by the MEETING CONTENT — not by the raw Gantt. The Gantt is only used to assign dates and show schedule impact\n'
+    + '5. Include as many critical path items as were raised in the meeting — do not limit the number\n\n'
     + 'RULES:\n'
-    + '- CRITICAL PATH ITEMS must only include tasks from the Gantt chart that fall within the next 4 weeks (' + todayStr + ' to ' + fourWeeksStr + ')\n'
-    + '- Include every Gantt task that falls in this window — do not skip any\n'
-    + '- Cross-reference each critical path item against the meeting transcript to determine owner, risk, and impact\n'
-    + '- If a task has no due date visible in the Gantt, exclude it from critical path\n'
     + '- Do NOT mention budgets, costs, or financials\n'
-    + '- Additional action items come from the meeting transcript only\n'
+    + '- Additional action items = smaller items from the meeting that are not schedule-critical\n'
     + '- Use the EXACT template format below — no deviations, no extra sections\n\n'
     + 'PROJECT: ' + projectName + '\n'
     + 'CLIENT NAME: ' + clientName + '\n'
@@ -263,24 +260,25 @@ function generateEmail() {
     + 'SENDER: ' + senderName + '\n'
     + 'REVIEW DEADLINE: ' + reviewDeadline + '\n'
     + (extra ? 'ADDITIONAL CONTEXT: ' + extra + '\n' : '')
-    + '\nGANTT CHART / SCHEDULE DATA:\n' + (ganttText || 'No Gantt chart provided')
-    + '\n\nMEETING TRANSCRIPT:\n' + (transcript || 'No transcript provided')
+    + '\nGANTT CHART / SCHEDULE DATA (reference only — use for dates and schedule impact):\n' + (ganttText || 'No Gantt chart provided')
+    + '\n\nMEETING TRANSCRIPT (primary source — critical path items come from here):\n' + (transcript || 'No transcript provided')
     + '\n\nOUTPUT THE EMAIL USING THIS EXACT TEMPLATE:\n\n'
     + 'SUBJECT: ' + projectName + ' \u2013 Post-Meeting Summary ' + meetingDate + '\n\n'
     + 'Hi ' + clientName + ',\n\n'
     + 'Thank you for your time today. Please find the full meeting minutes attached for your records. Below is a summary of the critical path items requiring immediate attention or action.\n\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
-    + '\ud83d\udd34 CRITICAL PATH ITEMS (' + todayStr + ' \u2013 ' + fourWeeksStr + ')\n'
+    + '\ud83d\udd34 CRITICAL PATH ITEMS\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + 'For each Gantt task due within the 4-week window, use this format:\n'
-    + '[number]. [Task Name from Gantt]\n'
-    + '   \u2022 Owner: [Name / Team from transcript or Gantt]\n'
-    + '   \u2022 Due Date: [Exact date from Gantt]\n'
-    + '   \u2022 Impact if Delayed: [One sentence on consequence to facade panel installation]\n\n'
+    + 'For each important item from the meeting (number them starting at 1), use this format:\n'
+    + '[number]. [Item Title — based on what was discussed in the meeting]\n'
+    + '   \u2022 Owner: [Name / Team from transcript]\n'
+    + '   \u2022 Related Gantt Task: [Task name from Gantt]\n'
+    + '   \u2022 Due Date: [Date from Gantt]\n'
+    + '   \u2022 Impact if Delayed: [One sentence on how this affects the facade panel schedule based on Gantt dependencies]\n\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
     + 'ADDITIONAL ACTION ITEMS\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
-    + '\u2022 [Action from transcript] \u2013 Owner: [Name] | Due: [Date]\n\n'
+    + '\u2022 [Smaller action from transcript] \u2013 Owner: [Name] | Due: [Date]\n\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
     + 'NEXT STEPS\n'
     + '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
